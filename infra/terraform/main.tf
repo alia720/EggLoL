@@ -51,6 +51,7 @@ resource "aws_db_instance" "postgresql-egglol" {
   allocated_storage = 20
   vpc_security_group_ids = [aws_security_group.security_group-eggLoL.id]
   publicly_accessible = true
+  db_name = "egglol"
   username = "egglol"
   password = "${random_string.password.result}"
 
