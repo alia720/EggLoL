@@ -4,6 +4,7 @@ import discord
 import aiohttp
 import configparser
 import psycopg2
+import lxml
 from psycopg2 import Error
 from bs4 import BeautifulSoup
 from typing import Optional
@@ -43,6 +44,16 @@ def query(query):
         cursor.execute(query)
 
         return cursor.fetchone()
+    
+async def aio_get_soup(url):
+
+    async with aiohttp.ClientSession(headers = {"User-Agent": "Mozilla/5.0"}) as session:
+
+        async with session.get(url = url) as response:
+
+            resp = await response.text()
+
+            return BeautifulSoup(resp, "lxml")
 
 # Bot initialization
 
