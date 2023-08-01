@@ -4,16 +4,47 @@ import discord
 import aiohttp
 import configparser
 import psycopg2
+from psycopg2 import Error
 from bs4 import BeautifulSoup
 from typing import Optional
 from discord import app_commands
 from discord.ext import commands
 
-
+# Read .ini file
 
 cfg = configparser.ConfigParser()
 
 cfg.read("main/keys.ini")
+
+# Connect to PostgreSQL database
+
+try:
+
+    conn = psycopg2.connect(
+
+        host = cfg.get("PostgreSQL", "Host"),
+        database = cfg.get("PostgreSQL", "Database"),
+        port = cfg.get("PostgreSQL", "Port"),
+        user = cfg.get("PostgreSQL", "Username"),
+        password = cfg.get("PostgreSQL", "Password")
+
+    )
+
+except (Exception, Error) as error:
+
+    print(f"An error occured while trying to connect to PostgreSQL: {error}")
+
+# Functions
+
+def query(query):
+
+    with conn.cursor() as cursor:
+
+        cursor.execute(query)
+
+        return cursor.fetchone()
+
+# Bot initialization
 
 TOKEN = cfg.get("Discord", "BotToken")
 
@@ -74,6 +105,6 @@ async def setProfile(interaction: discord.Interaction, region: app_commands.Choi
 
     await interaction.response.defer(ephemeral = False)
 
-    await interaction.followup.send(f"Region: {region}\nUsername: {username}\nMain: {main_champion}")
+    await interaction.followup.send(f"Region: {region}\nUsername: {username}\nMain: {main_champion}\n{query('SELECT * FROM discord_user;')}")
 
 bot.run(TOKEN)
