@@ -3,10 +3,13 @@
 import discord
 import aiohttp
 import configparser
+import psycopg2
 from bs4 import BeautifulSoup
 from typing import Optional
 from discord import app_commands
 from discord.ext import commands
+
+
 
 cfg = configparser.ConfigParser()
 
@@ -43,5 +46,34 @@ async def help(interaction: discord.Interaction):
 
     await interaction.followup.send(embed = embed, ephemeral = False)
     return
+
+@bot.tree.command(name = "set_profile", description = "For a more tailored experience, set up your LoL profile!")
+@app_commands.describe(region = "Your matchmaking region.", username = "Your LoL username.", main_champion = "Your main champion (if you don't main one champion, put your most played champion)")
+@app_commands.choices(region = [
+
+    app_commands.Choice(name = "NA", value = "NA"),
+    app_commands.Choice(name = "EUW", value = "EUW"),
+    app_commands.Choice(name = "KR", value = "KR"),
+    app_commands.Choice(name = "BR", value = "BR"),
+    app_commands.Choice(name = "EUN", value = "EUN"),
+    app_commands.Choice(name = "JP", value = "JP"),
+    app_commands.Choice(name = "LAN", value = "LAN"),
+    app_commands.Choice(name = "LAS", value = "LAS"),
+    app_commands.Choice(name = "OCE", value = "OCE"),
+    app_commands.Choice(name = "RU", value = "RU"),
+    app_commands.Choice(name = "TR", value = "TR"),
+    app_commands.Choice(name = "PH", value = "PH"),
+    app_commands.Choice(name = "SG", value = "SG"),
+    app_commands.Choice(name = "TH", value = "TH"),
+    app_commands.Choice(name = "TW", value = "TW"),
+    app_commands.Choice(name = "VN", value = "VN")
+
+])
+
+async def setProfile(interaction: discord.Interaction, region: app_commands.Choice[str], username: str, main_champion: str):
+
+    await interaction.response.defer(ephemeral = False)
+
+    await interaction.followup.send(f"Region: {region}\nUsername: {username}\nMain: {main_champion}")
 
 bot.run(TOKEN)
