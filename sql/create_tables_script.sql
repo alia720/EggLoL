@@ -5,7 +5,7 @@ CREATE TABLE lol_profile (
     username VARCHAR(16) NOT NULL,
     main_champion VARCHAR(14) NOT NULL,
     rank VARCHAR(11)
-    
+
 );
 
 CREATE TABLE discord_user (
@@ -15,3 +15,5 @@ CREATE TABLE discord_user (
     UNIQUE (profile_uuid)
 
 );
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
