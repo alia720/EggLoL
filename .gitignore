@@ -4,3 +4,4 @@ infra/terraform/.terraform.lock.hcl
 infra/terraform/.terraform/providers/registry.terraform.io/hashicorp/aws/5.10.0/windows_amd64/terraform-provider-aws_v5.10.0_x5.exe
 infra/terraform/.terraform/providers/registry.terraform.io/hashicorp/random/3.5.1/windows_amd64/terraform-provider-random_v3.5.1_x5.exe
 infra/terraform/.terraform/providers/registry.terraform.io/hashicorp/aws/5.10.0/windows_386/terraform-provider-aws_v5.10.0_x5.exe
+test/
