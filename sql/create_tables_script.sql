@@ -4,8 +4,8 @@ CREATE TABLE lol_profile (
     region VARCHAR(4) NOT NULL,
     username VARCHAR(16) NOT NULL,
     main_champion VARCHAR(14) NOT NULL,
-    rank VARCHAR(11),
-
+    rank VARCHAR(11)
+    
 );
 
 CREATE TABLE discord_user (
@@ -14,4 +14,4 @@ CREATE TABLE discord_user (
     profile_uuid UUID REFERENCES lol_profile (profile_uuid),
     UNIQUE (profile_uuid)
 
-)
+);
