@@ -84,45 +84,6 @@ async def aio_get_soup(url):
 
             return BeautifulSoup(resp, "lxml")
         
-async def get_champion_stats(champion_name):
-
-    with open("main/champs.json") as file:
-
-        champs_for_url = json.load(file)["champs_for_url"]
-
-    if champion_name in champs_for_url.keys():
-
-        champion_name = champs_for_url[champion_name]
-
-    url = f"https://u.gg/lol/champions/{champion_name}/build"
-
-    soup = await aio_get_soup(url)
-
-    try:
-
-        tier = soup.find("div", "champion-ranking-stats-normal").find("div","tier value okay-tier").text
-        winrate = soup.find("div", "champion-ranking-stats-normal").find("div","win-rate okay-tier").div.text
-        overallrank = soup.find("div", "champion-ranking-stats-normal").find("div","overall-rank").div.text
-        pickrate = soup.find("div", "champion-ranking-stats-normal").find("div","pick-rate").div.text
-        banrate = soup.find("div", "champion-ranking-stats-normal").find("div","ban-rate").div.text
-        totalmatches = soup.find("div", "champion-ranking-stats-normal").find("div","matches").div.text
-
-        return {
-
-            "Champion": champion_name,
-            "Tier": tier,
-            "Win Rate": winrate,
-            "Rank": overallrank,
-            "Pick Rate": pickrate,
-            "Ban Rate": banrate,
-            "Matches": totalmatches,
-
-        }
-    
-    except AttributeError:
-
-        print(f"Error: Data not found for {champion_name}.")
-        return None
 
 # Bot initialization
 
@@ -259,6 +220,44 @@ async def setProfile(interaction: discord.Interaction, region: app_commands.Choi
     #
     
     await interaction.followup.send(f"Region: {region}\nUsername: {username}\nMain: {main_champion_char_corrected}\nRank: {rank} {lp}")
+
+
+
+@bot.tree.command(name = "champion_stats", description = "Lookup a champion for more info!")
+@app_commands.describe(champion_name = "Champion name for info")
+async def champion_stats(interaction: discord.Interaction, champion_name: str):
+
+    await interaction.response.defer(ephemeral = False)
+
+
+    with open("main/champs.json") as file:
+
+        champs_for_url = json.load(file)["champs_for_url"]
+
+    if champion_name in champs_for_url.keys():
+
+        champion_name = champs_for_url[champion_name]
+
+    url = f"https://u.gg/lol/champions/{champion_name}/build"
+
+    soup = await aio_get_soup(url)
+
+    try:
+
+        tier = soup.find("div", "champion-ranking-stats-normal").find("div","tier value okay-tier").text
+        winrate = soup.find("div", "champion-ranking-stats-normal").find("div","win-rate okay-tier").div.text
+        overallrank = soup.find("div", "champion-ranking-stats-normal").find("div","overall-rank").div.text
+        pickrate = soup.find("div", "champion-ranking-stats-normal").find("div","pick-rate").div.text
+        banrate = soup.find("div", "champion-ranking-stats-normal").find("div","ban-rate").div.text
+        totalmatches = soup.find("div", "champion-ranking-stats-normal").find("div","matches").div.text
+    
+    except AttributeError:
+
+        print(f"Error: Data not found for {champion_name}.")
+        return None
+    
+    await interaction.followup.send(f"Champion: {champion_name}\nTier: {tier}\nWin Rate: {winrate}\nRank: {overallrank}\nPick Rate: {pickrate}\nBan Rate: {banrate}\nMatches: {totalmatches}")
+
 
 
 
