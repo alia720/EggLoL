@@ -34,6 +34,8 @@ try:
 
     )
 
+    conn.autocommit = True
+
     print("Successfully connected to Postgres server!")
 
 except (Exception, Error) as error:
@@ -53,12 +55,12 @@ def query(query):
         with conn.cursor() as cursor:
 
             cursor.execute(query)
-            conn.commit()
 
             return 200
         
-    except IntegrityError as e:
+    except Error as e:
 
+        print(e)
         return 409
     
 def get_champs_json():
@@ -200,7 +202,7 @@ async def setProfile(interaction: discord.Interaction, region: app_commands.Choi
 
     champ_index = all_champs_lowered.index(main_champion.lower())
 
-    main_champion_char_corrected = all_champs[champ_index]
+    main_champion_char_corrected = all_champs[champ_index].replace("'", '"')
 
     # Checkpoint | main_champion has been character corrected
 
@@ -257,8 +259,5 @@ async def champion_stats(interaction: discord.Interaction, champion_name: str):
         return None
     
     await interaction.followup.send(f"Champion: {champion_name}\nTier: {tier}\nWin Rate: {winrate}\nRank: {overallrank}\nPick Rate: {pickrate}\nBan Rate: {banrate}\nMatches: {totalmatches}")
-
-
-
 
 bot.run(TOKEN)
