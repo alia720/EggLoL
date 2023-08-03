@@ -11,6 +11,7 @@ typing = "*"
 configparser = "*"
 psycopg2 = "*"
 lxml = "*"
+simplejson = "*"
 
 [dev-packages]
 

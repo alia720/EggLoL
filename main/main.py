@@ -5,6 +5,7 @@ import aiohttp
 import configparser
 import psycopg2
 import lxml
+import simplejson as json
 from psycopg2 import Error
 from bs4 import BeautifulSoup
 from typing import Optional
@@ -35,7 +36,11 @@ except (Exception, Error) as error:
 
     print(f"An error occured while trying to connect to PostgreSQL: {error}")
 
-# Functions
+# Synchronous functions
+
+def embed_error(msg):
+
+    return discord.Embed(title = "Error(s)", description = f"{msg}", color = 0xff0000)
 
 def query(query):
 
@@ -45,6 +50,24 @@ def query(query):
 
         return cursor.fetchone()
     
+def check_champ(champ_name):
+
+    with open("main/champs.json") as file:
+
+        champs = json.load(file)
+
+    champs_list = list(map(str.lower, champs["champs_list"]))
+
+    champs_for_url = list(map(str.lower, champs["champs_for_url"].keys()))
+
+    if champ_name.lower() not in champs_list and champ_name not in champs_for_url:
+
+        return f"* **{champ_name}** is not a champion in League of Legends.\n"
+    
+    return ""
+    
+# Asynchronous functions
+
 async def aio_get_soup(url):
 
     async with aiohttp.ClientSession(headers = {"User-Agent": "Mozilla/5.0"}) as session:
@@ -54,6 +77,46 @@ async def aio_get_soup(url):
             resp = await response.text()
 
             return BeautifulSoup(resp, "lxml")
+        
+async def get_champion_stats(champion_name):
+
+    with open("main/champs.json") as file:
+
+        champs_for_url = json.load(file)["champs_for_url"]
+
+    if champion_name in champs_for_url.keys():
+
+        champion_name = champs_for_url[champion_name]
+
+    url = f"https://u.gg/lol/champions/{champion_name}/build"
+
+    soup = await aio_get_soup(url)
+
+    try:
+
+        tier = soup.find("div", "champion-ranking-stats-normal").find("div","tier value okay-tier").text
+        winrate = soup.find("div", "champion-ranking-stats-normal").find("div","win-rate okay-tier").div.text
+        overallrank = soup.find("div", "champion-ranking-stats-normal").find("div","overall-rank").div.text
+        pickrate = soup.find("div", "champion-ranking-stats-normal").find("div","pick-rate").div.text
+        banrate = soup.find("div", "champion-ranking-stats-normal").find("div","ban-rate").div.text
+        totalmatches = soup.find("div", "champion-ranking-stats-normal").find("div","matches").div.text
+
+        return {
+
+            "Champion": champion_name,
+            "Tier": tier,
+            "Win Rate": winrate,
+            "Rank": overallrank,
+            "Pick Rate": pickrate,
+            "Ban Rate": banrate,
+            "Matches": totalmatches,
+
+        }
+    
+    except AttributeError:
+
+        print(f"Error: Data not found for {champion_name}.")
+        return None
 
 # Bot initialization
 
@@ -83,9 +146,11 @@ async def on_ready():
 async def help(interaction: discord.Interaction):
 
     await interaction.response.defer(ephemeral = False)
+    #
 
     embed = discord.Embed(title = "Test", color = 0xE8E1E1)
 
+    #
     await interaction.followup.send(embed = embed, ephemeral = False)
     return
 
@@ -115,7 +180,45 @@ async def help(interaction: discord.Interaction):
 async def setProfile(interaction: discord.Interaction, region: app_commands.Choice[str], username: str, main_champion: str):
 
     await interaction.response.defer(ephemeral = False)
+    #
 
-    await interaction.followup.send(f"Region: {region}\nUsername: {username}\nMain: {main_champion}\n{query('SELECT * FROM discord_user;')}")
+    with open("main/regions.json") as file:
+
+        regions = json.load(file)
+
+    user_url = f"https://u.gg/lol/profile/{regions[region.value]}/{username}/overview"
+
+    profile_soup = await aio_get_soup(user_url)
+
+    error_msg = ""
+
+    try:
+
+        name = profile_soup.find("div", "summoner-name").text
+
+    except AttributeError as e:
+
+        error_msg += f"* The username **{username}** was not found in the **{region.value}** region. *Try another region or double-check the username*.\n"
+
+
+    error_msg += check_champ(main_champion)
+
+    if error_msg != "":
+
+        await interaction.followup.send(embed = embed_error(error_msg))
+        return
+
+    rank = profile_soup.find("span", "unranked").text
+    lp = ""
+
+    if rank  == "":
+
+        rank = profile_soup.find("div", "rank-text").span.text
+        lp = profile_soup.find("div", "rank-text").find_all("span")[1].text
+
+    #
+    await interaction.followup.send(f"Region: {region.value}\nUsername: {username}\nMain: {main_champion}\nRank: {rank} {lp}")
+
+
 
 bot.run(TOKEN)
