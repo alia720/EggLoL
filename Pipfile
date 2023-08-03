@@ -12,6 +12,7 @@ configparser = "*"
 psycopg2 = "*"
 lxml = "*"
 simplejson = "*"
+uuid7 = "*"
 
 [dev-packages]
 

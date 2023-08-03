@@ -6,7 +6,9 @@ import configparser
 import psycopg2
 import lxml
 import simplejson as json
+from uuid_extensions import uuid7
 from psycopg2 import Error
+from psycopg2 import IntegrityError
 from bs4 import BeautifulSoup
 from typing import Optional
 from discord import app_commands
@@ -32,6 +34,8 @@ try:
 
     )
 
+    print("Successfully connected to Postgres server!")
+
 except (Exception, Error) as error:
 
     print(f"An error occured while trying to connect to PostgreSQL: {error}")
@@ -44,27 +48,29 @@ def embed_error(msg):
 
 def query(query):
 
-    with conn.cursor() as cursor:
+    try:
 
-        cursor.execute(query)
+        with conn.cursor() as cursor:
 
-        return cursor.fetchone()
+            cursor.execute(query)
+            conn.commit()
+
+            return 200
+        
+    except IntegrityError as e:
+
+        return 409
     
-def check_champ(champ_name):
+def get_champs_json():
 
     with open("main/champs.json") as file:
 
         champs = json.load(file)
 
-    champs_list = list(map(str.lower, champs["champs_list"]))
+    champs_list = list(champs["champs_list"])
+    champs_for_url = list(champs["champs_for_url"].keys())
 
-    champs_for_url = list(map(str.lower, champs["champs_for_url"].keys()))
-
-    if champ_name.lower() not in champs_list and champ_name not in champs_for_url:
-
-        return f"* **{champ_name}** is not a champion in League of Legends.\n"
-    
-    return ""
+    return champs_list, champs_for_url
     
 # Asynchronous functions
 
@@ -177,16 +183,18 @@ async def help(interaction: discord.Interaction):
 
 ])
 
-async def setProfile(interaction: discord.Interaction, region: app_commands.Choice[str], username: str, main_champion: str):
+async def setProfile(interaction: discord.Interaction, region: app_commands.Choice[str], username: app_commands.Range[str, 3, 16], main_champion: app_commands.Range[str, 3, 14]):
 
     await interaction.response.defer(ephemeral = False)
     #
+
+    region = region.value
 
     with open("main/regions.json") as file:
 
         regions = json.load(file)
 
-    user_url = f"https://u.gg/lol/profile/{regions[region.value]}/{username}/overview"
+    user_url = f"https://u.gg/lol/profile/{regions[region]}/{username}/overview"
 
     profile_soup = await aio_get_soup(user_url)
 
@@ -194,19 +202,27 @@ async def setProfile(interaction: discord.Interaction, region: app_commands.Choi
 
     try:
 
-        name = profile_soup.find("div", "summoner-name").text
+        username_char_corrected = profile_soup.find("div", "summoner-name").text
 
     except AttributeError as e:
 
-        error_msg += f"* The username **{username}** was not found in the **{region.value}** region. *Try another region or double-check the username*.\n"
+        error_msg += f"* The username **{username}** was not found in the **{region}** region. *Try another region or double-check the username*.\n"
 
+    champs_list, champs_for_url = get_champs_json()
 
-    error_msg += check_champ(main_champion)
+    champs_list_lowered = list(map(str.lower, champs_list))
+    champs_for_url_lowered = list(map(str.lower, champs_for_url))
+
+    if main_champion.lower() not in champs_list_lowered and main_champion.lower() not in champs_for_url_lowered:
+
+        error_msg += f"* **{main_champion}** is not a champion in League of Legends.\n"
 
     if error_msg != "":
 
         await interaction.followup.send(embed = embed_error(error_msg))
         return
+    
+    # Checkpoint | username and main_champion have been verified 
 
     rank = profile_soup.find("span", "unranked").text
     lp = ""
@@ -216,8 +232,33 @@ async def setProfile(interaction: discord.Interaction, region: app_commands.Choi
         rank = profile_soup.find("div", "rank-text").span.text
         lp = profile_soup.find("div", "rank-text").find_all("span")[1].text
 
+    # Checkpoint | rank has been retrieved
+
+    all_champs = champs_list + champs_for_url
+    all_champs_lowered = champs_list_lowered + champs_for_url_lowered
+
+    champ_index = all_champs_lowered.index(main_champion.lower())
+
+    main_champion_char_corrected = all_champs[champ_index]
+
+    # Checkpoint | main_champion has been character corrected
+
+    uuid = uuid7()
+
+    initial_query_resp = query(f"INSERT INTO discord_user (discord_user_id) VALUES ({interaction.user.id});")
+
+    if initial_query_resp == 409:
+
+        await interaction.followup.send(embed = embed_error("* You have already set up a profile, try updating it instead."))
+        return
+
+    query(f"INSERT INTO lol_profile (profile_uuid, region, username, main_champion, rank) VALUES ('{uuid}', '{region}', '{username_char_corrected}', '{main_champion_char_corrected}', '{rank} {lp}');")
+
+    query(f"UPDATE discord_user SET profile_uuid = '{uuid}' WHERE discord_user_id = {interaction.user.id}")
+
     #
-    await interaction.followup.send(f"Region: {region.value}\nUsername: {username}\nMain: {main_champion}\nRank: {rank} {lp}")
+    
+    await interaction.followup.send(f"Region: {region}\nUsername: {username}\nMain: {main_champion_char_corrected}\nRank: {rank} {lp}")
 
 
 
