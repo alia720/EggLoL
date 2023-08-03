@@ -183,8 +183,11 @@ async def setProfile(interaction: discord.Interaction, region: app_commands.Choi
 
 
 @bot.tree.command(name = "champion_stats", description = "Lookup a champion for more info!")
-@app_commands.describe(champion = "Champion name for info")
+@app_commands.describe(champion_name = "Champion name for info")
 async def champion_stats(interaction: discord.Interaction, champion_name: str):
+
+    await interaction.response.defer(ephemeral = False)
+
 
     with open("main/champs.json") as file:
 
