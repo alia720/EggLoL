@@ -209,23 +209,14 @@ async def champion_stats(interaction: discord.Interaction, champion_name: str):
         pickrate = soup.find("div", "champion-ranking-stats-normal").find("div","pick-rate").div.text
         banrate = soup.find("div", "champion-ranking-stats-normal").find("div","ban-rate").div.text
         totalmatches = soup.find("div", "champion-ranking-stats-normal").find("div","matches").div.text
-
-        return {
-
-            "Champion": champion_name,
-            "Tier": tier,
-            "Win Rate": winrate,
-            "Rank": overallrank,
-            "Pick Rate": pickrate,
-            "Ban Rate": banrate,
-            "Matches": totalmatches,
-
-        }
     
     except AttributeError:
 
         print(f"Error: Data not found for {champion_name}.")
         return None
+    
+    await interaction.followup.send(f"Champion: {champion_name}\nTier: {tier}\nWin Rate: {winrate}\nRank: {overallrank}\nPick Rate: {pickrate}\nBan Rate: {banrate}\nMatches: {totalmatches}")
+
 
 
 
