@@ -48,7 +48,7 @@ def embed_error(msg):
 
     return discord.Embed(title = "Error(s)", description = f"{msg}", color = 0xff0000)
 
-def query(query):
+def query_mainpulate_data(query):
 
     try:
 
@@ -58,9 +58,22 @@ def query(query):
 
             return 200
         
-    except Error as e:
+    except:
 
-        print(e)
+        return 409
+    
+def query_get_data(query):
+
+    try:
+
+        with conn.cursor() as cursor:
+
+            cursor.execute(query)
+
+            return cursor.fetchone()
+        
+    except:
+
         return 409
     
 def get_champs_json():
@@ -202,28 +215,50 @@ async def setProfile(interaction: discord.Interaction, region: app_commands.Choi
 
     champ_index = all_champs_lowered.index(main_champion.lower())
 
-    main_champion_char_corrected = all_champs[champ_index].replace("'", '"')
+    main_champion_for_ui = all_champs[champ_index]
+    main_champion_for_db = main_champion_for_ui.replace("'", '"')
 
     # Checkpoint | main_champion has been character corrected
 
     uuid = uuid7()
+    discord_user_id = interaction.user.id
 
-    initial_query_resp = query(f"INSERT INTO discord_user (discord_user_id) VALUES ({interaction.user.id});")
+    initial_query_resp = query_mainpulate_data(f"INSERT INTO discord_user (discord_user_id) VALUES ({discord_user_id});")
 
     if initial_query_resp == 409:
 
-        await interaction.followup.send(embed = embed_error("* You have already set up a profile, try updating it instead."))
+        try:
+
+            profile_uuid = query_get_data(f"SELECT profile_uuid FROM discord_user WHERE discord_user_id = {discord_user_id}")[0]
+            lol_profile_data = query_get_data(f"SELECT region, username, main_champion, rank FROM lol_profile WHERE profile_uuid = '{profile_uuid}'")
+
+        except:
+
+            await interaction.followup.send(embed = embed_error("* Something went wrong while updating your profile. Try again later."))
+            return
+
+        enetered_data_tuple = (region, username_char_corrected, main_champion_for_db, f"{rank} {lp}")
+
+        if enetered_data_tuple == lol_profile_data:
+
+            embed = discord.Embed(title = "Your current profile already matches what you entered...", color = 0xFFA63B)
+            await interaction.followup.send(embed = embed)
+            return
+
+        query_mainpulate_data(f"UPDATE lol_profile SET region = '{region}', username = '{username_char_corrected}', main_champion = '{main_champion_for_db}', rank = '{rank} {lp}' WHERE profile_uuid = '{profile_uuid}';")
+
+        embed = discord.Embed(title = "Profile has been updated!", description = f"__Your new profile__:\n\n**Region**: {region}\n**Username**: {username_char_corrected}\n**Main Champion**: {main_champion_for_ui}\n**Rank**: {rank} {lp}", color = 0x00AA00)
+        await interaction.followup.send(embed = embed)
         return
 
-    query(f"INSERT INTO lol_profile (profile_uuid, region, username, main_champion, rank) VALUES ('{uuid}', '{region}', '{username_char_corrected}', '{main_champion_char_corrected}', '{rank} {lp}');")
-
-    query(f"UPDATE discord_user SET profile_uuid = '{uuid}' WHERE discord_user_id = {interaction.user.id}")
+    query_mainpulate_data(f"INSERT INTO lol_profile (profile_uuid, region, username, main_champion, rank) VALUES ('{uuid}', '{region}', '{username_char_corrected}', '{main_champion_for_db}', '{rank} {lp}');")
+    query_mainpulate_data(f"UPDATE discord_user SET profile_uuid = '{uuid}' WHERE discord_user_id = {discord_user_id}")
 
     #
     
-    await interaction.followup.send(f"Region: {region}\nUsername: {username}\nMain: {main_champion_char_corrected}\nRank: {rank} {lp}")
-
-
+    embed = discord.Embed(title = "Profile has been created!", description = f"__Your new profile__:\n\n**Region**: {region}\n**Username**: {username_char_corrected}\n**Main Champion**: {main_champion_for_ui}\n**Rank**: {rank} {lp}", color = 0x00AA00)
+    await interaction.followup.send(embed = embed)
+    return
 
 @bot.tree.command(name = "champion_stats", description = "Lookup a champion for more info!")
 @app_commands.describe(champion_name = "Champion name for info")
