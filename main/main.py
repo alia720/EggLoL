@@ -362,12 +362,7 @@ async def setProfile(interaction: discord.Interaction, region: app_commands.Choi
 
     ]
 )
-async def overview(
-    interaction: discord.Interaction, champion_name: str,
-    role: Optional[app_commands.Choice[str]] = None,
-    rank: Optional[app_commands.Choice[str]] = '{"name": "Emerald +"}', 
-    queue_type: Optional[app_commands.Choice[str]] = '{"name": "Ranked Solo/Duo"}',
-    region: Optional[app_commands.Choice[str]] = '{"name": "World", "value": "World"}'):
+async def overview(interaction: discord.Interaction, champion_name: str, role: Optional[app_commands.Choice[str]] = None, rank: Optional[app_commands.Choice[str]] = '{"name": "Emerald +"}',  queue_type: Optional[app_commands.Choice[str]] = '{"name": "Ranked Solo/Duo"}', region: Optional[app_commands.Choice[str]] = '{"name": "World", "value": "World"}'):
 
     await interaction.response.defer(ephemeral = False)
 
