@@ -11,6 +11,7 @@ from psycopg2 import Error
 from psycopg2 import IntegrityError
 from bs4 import BeautifulSoup
 from typing import Optional
+from types import SimpleNamespace
 from discord import app_commands
 from discord.ext import commands
 
@@ -76,16 +77,64 @@ def query_get_data(query):
 
         return 409
     
-def get_champs_json():
+def get_champs_json(choice):
 
     with open("main/champs.json") as file:
 
         champs = json.load(file)
 
-    champs_list = list(champs["champs_list"])
-    champs_for_url = champs["champs_for_url"]
+    if choice == 1:
 
-    return champs_list, champs_for_url
+        return list(champs["champs_list"]) + list(champs["champs_for_url"].keys())
+
+    elif choice == 2:
+
+        champs_list = list(champs["champs_list"])
+        champs_for_url = champs["champs_for_url"]
+
+        return champs_list, champs_for_url
+
+    elif choice == 3:
+
+        return champs["champs_for_url"]
+
+def lower_list(list_to_lower):
+
+    return list(map(str.lower, list_to_lower))
+
+def is_valid_champion(champion_name):
+
+    all_champs_lowered = lower_list(get_champs_json(1))
+
+    if champion_name.lower() not in all_champs_lowered:
+
+        return False
+    
+    else:
+
+        return True
+    
+def get_champion_for_ui(champion_name):
+
+    all_champs = get_champs_json(1)
+
+    all_champs_lowered = lower_list(all_champs)
+
+    champ_index = all_champs_lowered.index(champion_name.lower())
+
+    return all_champs[champ_index]
+
+def get_champion_for_url(champion_name):
+
+    champs_for_url = get_champs_json(3)
+
+    for key, value in champs_for_url.items():
+
+        if key.lower() == champion_name.lower():
+
+            return value
+        
+    return champion_name
     
 # Asynchronous functions
 
@@ -184,12 +233,7 @@ async def setProfile(interaction: discord.Interaction, region: app_commands.Choi
 
         error_msg += f"* The username **{username}** was not found in the **{region}** region. *Try another region or double-check the username*.\n"
 
-    champs_list, champs_for_url = get_champs_json()
-
-    champs_list_lowered = list(map(str.lower, champs_list))
-    champs_for_url_lowered = list(map(str.lower, champs_for_url.keys()))
-
-    if main_champion.lower() not in champs_list_lowered and main_champion.lower() not in champs_for_url_lowered:
+    if is_valid_champion(main_champion) == False:
 
         error_msg += f"* **{main_champion}** is not a champion in League of Legends.\n"
 
@@ -210,12 +254,7 @@ async def setProfile(interaction: discord.Interaction, region: app_commands.Choi
 
     # Checkpoint | rank has been retrieved
 
-    all_champs = champs_list + list(champs_for_url.keys())
-    all_champs_lowered = champs_list_lowered + champs_for_url_lowered
-
-    champ_index = all_champs_lowered.index(main_champion.lower())
-
-    main_champion_for_ui = all_champs[champ_index]
+    main_champion_for_ui = get_champion_for_ui(main_champion)
     main_champion_for_db = main_champion_for_ui.replace("'", '"')
 
     # Checkpoint | main_champion has been character corrected
@@ -260,7 +299,7 @@ async def setProfile(interaction: discord.Interaction, region: app_commands.Choi
     await interaction.followup.send(embed = embed)
     return
 
-@bot.tree.command(name = "champion_stats", description = "Lookup a champion for more info!")
+@bot.tree.command(name = "overview", description = "Get an overview of the champion in your specific rank, region and role!")
 @app_commands.describe(champion_name = "Champion name for info")
 @app_commands.choices(
     
@@ -323,49 +362,57 @@ async def setProfile(interaction: discord.Interaction, region: app_commands.Choi
 
     ]
 )
-async def champion_stats(interaction: discord.Interaction, champion_name: str, role: Optional[app_commands.Choice[str]] = None, rank: Optional[app_commands.Choice[str]] = discord.app_commands.models.Choice(name = "Ranked Solo/Duo", value = ""), queue_type: Optional[app_commands.Choice[str]] = None, region: Optional[app_commands.Choice[str]] = None):
+async def overview(
+    interaction: discord.Interaction, champion_name: str,
+    role: Optional[app_commands.Choice[str]] = None,
+    rank: Optional[app_commands.Choice[str]] = '{"name": "Emerald +"}', 
+    queue_type: Optional[app_commands.Choice[str]] = '{"name": "Ranked Solo/Duo"}',
+    region: Optional[app_commands.Choice[str]] = '{"name": "World", "value": "World"}'):
 
     await interaction.response.defer(ephemeral = False)
 
     error_msg = ""
 
+    if isinstance(region, str):
+
+        default_region_json = json.loads(region)
+
+        region = SimpleNamespace(**default_region_json)
+
+    if isinstance(queue_type, str):
+
+        default_queue_json = json.loads(queue_type)
+
+        queue_type = SimpleNamespace(**default_queue_json)
+
     if queue_type.name == "ARAM" and role != None:
 
         error_msg += f"* **ARAM** game mode does not have roles!\n"
 
-    if queue_type.name == "ARAM" and role != None:
+    if queue_type.name == "ARAM" and rank != '{"name": "Emerald +"}':
 
         error_msg += f"* **ARAM** game mode does not have ranks!\n"
+
+    if (queue_type.name == "Normal Blind" or queue_type.name == "Normal Draft") and rank != '{"name": "Emerald +"}':
+
+        error_msg += f"* **Normal** game modes do not have ranks!\n"
 
     if error_msg != "":
 
         await interaction.followup.send(embed = embed_error(error_msg))
         return
 
-    champs_list, champs_for_url = get_champs_json()
-
-    all_champs = champs_list + list(champs_for_url.keys())
-
-    all_champs_lowered = list(map(str.lower, all_champs))
-
-    if champion_name.lower() not in all_champs_lowered:
+    if is_valid_champion(champion_name) == False:
 
         await interaction.followup.send(embed = embed_error(f"* **{champion_name}** is not a champion in League of Legends.\n"))
         return
 
-    champs_for_url_keys_lowered = list(map(str.lower, champs_for_url.keys()))
-
-    if champion_name.lower() in champs_for_url_keys_lowered:
-
-        main_champion_for_url = champs_for_url[champion_name]
-
-    champ_index = all_champs_lowered.index(champion_name.lower())
-
-    main_champion_for_ui = all_champs[champ_index]
+    champion_name_for_url = get_champion_for_url(champion_name)
+    champion_name_for_ui = get_champion_for_ui(champion_name)
 
     if queue_type.name != "ARAM":
 
-        url = f"https://u.gg/lol/champions/{main_champion_for_url}/build"
+        url = f"https://u.gg/lol/champions/{champion_name_for_url}/build"
 
         if role != None:
 
@@ -373,19 +420,25 @@ async def champion_stats(interaction: discord.Interaction, champion_name: str, r
 
         url += "?"
 
-        if rank.name != None and rank.name != "Emerald +":
+        if isinstance(rank, str):
+
+            default_rank_json = json.loads(rank)
+
+            rank = SimpleNamespace(**default_rank_json)
+
+        if rank.name != "Emerald +":
 
             url += f"rank={rank.value}&"
 
         if queue_type.name != "Ranked Solo/Duo":
 
-            url += f"queueType={rank.value}&"
+            url += f"queueType={queue_type.value}&"
 
     else:
 
-        url = f"https://u.gg/lol/champions/aram/{main_champion_for_url}-aram?"
+        url = f"https://u.gg/lol/champions/aram/{champion_name_for_url}-aram?"
 
-    if region != None:
+    if type(region) != SimpleNamespace:
 
         url += f"region={region.value}"
 
@@ -399,14 +452,23 @@ async def champion_stats(interaction: discord.Interaction, champion_name: str, r
         pick_rate = soup.find("div", "pick-rate").div.text
         ban_rate = soup.find("div", "ban-rate").div.text
         total_matches = soup.find("div", "matches").div.text
-        role = soup.find("div", "role-value").div.text
+        if queue_type.name != "ARAM":
+        
+            role = soup.find("div", "role-value").div.text
     
     except AttributeError:
 
-        await interaction.followup.send(embed = embed_error(f"* No data was found for {main_champion_for_ui}!"))
+        await interaction.followup.send(embed = embed_error(f"* No data was found for {champion_name_for_ui}!"))
         return
 
-    embed = discord.Embed(title = f"{main_champion_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**", color = 0x222247)
+    if queue_type.name != "ARAM":
+
+        embed = discord.Embed(title = f"{champion_name_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**", color = 0x222247)
+
+    else:
+        
+        embed = discord.Embed(title = f"{champion_name_for_ui}", description = f"**{queue_type.name}** in **{region.name}**", color = 0x222247)
+
     embed.add_field(name = "Tier", value =  f"{tier}")
     embed.add_field(name = "Win Rate", value =  f"{win_rate}")
     embed.add_field(name = "Position", value =  f"{overall_rank}")
