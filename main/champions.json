@@ -1,6 +1,6 @@
 {
 
-    "champs_for_url": {
+    "champions_for_url": {
 
         "Aurelion Sol": "aurelionsol",
         "Bel'Veth": "belveth",
@@ -22,7 +22,7 @@
 
     },
 
-    "champs_list": [
+    "champions_list": [
 
         "Aatrox",
         "Ahri",

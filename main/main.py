@@ -77,26 +77,26 @@ def query_get_data(query):
 
         return 409
     
-def get_champs_json(choice):
+def get_champions_json(choice):
 
-    with open("main/champs.json") as file:
+    with open("main/champions.json") as file:
 
-        champs = json.load(file)
+        champions = json.load(file)
 
     if choice == 1:
 
-        return list(champs["champs_list"]) + list(champs["champs_for_url"].keys())
+        return list(champions["champions_list"]) + list(champions["champions_for_url"].keys())
 
     elif choice == 2:
 
-        champs_list = list(champs["champs_list"])
-        champs_for_url = champs["champs_for_url"]
+        champions_list = list(champions["champions_list"])
+        champions_for_url = champions["champions_for_url"]
 
-        return champs_list, champs_for_url
+        return champions_list, champions_for_url
 
     elif choice == 3:
 
-        return champs["champs_for_url"]
+        return champions["champions_for_url"]
 
 def lower_list(list_to_lower):
 
@@ -104,9 +104,9 @@ def lower_list(list_to_lower):
 
 def is_valid_champion(champion_name):
 
-    all_champs_lowered = lower_list(get_champs_json(1))
+    all_champions_lowered = lower_list(get_champions_json(1))
 
-    if champion_name.lower() not in all_champs_lowered:
+    if champion_name.lower() not in all_champions_lowered:
 
         return False
     
@@ -116,19 +116,19 @@ def is_valid_champion(champion_name):
     
 def get_champion_for_ui(champion_name):
 
-    all_champs = get_champs_json(1)
+    all_champions = get_champions_json(1)
 
-    all_champs_lowered = lower_list(all_champs)
+    all_champions_lowered = lower_list(all_champions)
 
-    champ_index = all_champs_lowered.index(champion_name.lower())
+    champ_index = all_champions_lowered.index(champion_name.lower())
 
-    return all_champs[champ_index]
+    return all_champions[champ_index]
 
 def get_champion_for_url(champion_name):
 
-    champs_for_url = get_champs_json(3)
+    champions_for_url = get_champions_json(3)
 
-    for key, value in champs_for_url.items():
+    for key, value in champions_for_url.items():
 
         if key.lower() == champion_name.lower():
 
