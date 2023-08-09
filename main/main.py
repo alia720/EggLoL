@@ -61,7 +61,7 @@ def query_mainpulate_data(query):
         
     except:
 
-        return 409
+        return 400
     
 def query_get_data(query):
 
@@ -75,7 +75,7 @@ def query_get_data(query):
         
     except:
 
-        return 409
+        return 400
     
 def get_champions_json(choice):
 
@@ -135,6 +135,14 @@ def get_champion_for_url(champion_name):
             return value
         
     return champion_name
+
+def get_region_for_url(region):
+
+    with open("main/regions.json") as file:
+
+        regions = json.load(file)
+
+    return regions[region]
     
 # Asynchronous functions
 
@@ -229,7 +237,7 @@ async def setProfile(interaction: discord.Interaction, region: app_commands.Choi
 
         username_char_corrected = profile_soup.find("div", "summoner-name").text
 
-    except AttributeError as e:
+    except AttributeError:
 
         error_msg += f"* The username **{username}** was not found in the **{region}** region. *Try another region or double-check the username*.\n"
 
@@ -264,7 +272,7 @@ async def setProfile(interaction: discord.Interaction, region: app_commands.Choi
 
     initial_query_resp = query_mainpulate_data(f"INSERT INTO discord_user (discord_user_id) VALUES ({discord_user_id});")
 
-    if initial_query_resp == 409:
+    if initial_query_resp == 400:
 
         try:
 
@@ -343,6 +351,7 @@ async def setProfile(interaction: discord.Interaction, region: app_commands.Choi
     ],
     region = [
 
+        app_commands.Choice(name = "World", value = "world"),
         app_commands.Choice(name = "NA", value = "na1"),
         app_commands.Choice(name = "EUW", value = "euw1"),
         app_commands.Choice(name = "KR", value = "kr"),
@@ -366,19 +375,27 @@ async def overview(interaction: discord.Interaction, champion_name: str, role: O
 
     await interaction.response.defer(ephemeral = False)
 
-    error_msg = ""
-
     if isinstance(region, str):
 
-        default_region_json = json.loads(region)
+        region_resp = query_get_data(f"SELECT region FROM discord_user JOIN lol_profile USING (profile_uuid) WHERE discord_user_id = {interaction.user.id}")
 
-        region = SimpleNamespace(**default_region_json)
+        if region_resp != 400:
+
+            region = app_commands.Choice(name = region_resp[0], value = get_region_for_url(region_resp[0]))
+
+        else:
+
+            default_region_json = json.loads(region)
+
+            region = SimpleNamespace(**default_region_json)
 
     if isinstance(queue_type, str):
 
         default_queue_json = json.loads(queue_type)
 
         queue_type = SimpleNamespace(**default_queue_json)
+
+    error_msg = ""
 
     if queue_type.name == "ARAM" and role != None:
 
