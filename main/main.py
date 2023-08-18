@@ -492,12 +492,12 @@ async def overview(interaction: discord.Interaction, champion_name: str, role: O
 
 
 @bot.tree.command(name = "profile", description = "Check if the user has a profile in our database")
-async def profile(interaction: discord.Interaction, champion_name:str):
+async def profile(interaction: discord.Interaction, profile_name:str):
 
     await interaction.response.defer(ephemeral=False)
 
     # Retrieve user's profile from the database
-    user_profile = ""
+    user_profile = retrieve_user_profile(profile_name)
 
     if user_profile is None:
 
