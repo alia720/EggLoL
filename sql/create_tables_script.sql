@@ -4,7 +4,7 @@ CREATE TABLE lol_profile (
     region VARCHAR(4) NOT NULL,
     username VARCHAR(16) NOT NULL,
     main_champion VARCHAR(14) NOT NULL,
-    rank VARCHAR(11)
+    rank VARCHAR(25)
 
 );
 
