@@ -492,7 +492,12 @@ async def overview(interaction: discord.Interaction, champion_name: str, role: O
 
 
 @bot.tree.command(name = "profile", description = "Check if the user has a profile in our database")
+
+async def retrieve_user_profile(profile_name):
+    pass
+
 async def profile(interaction: discord.Interaction, profile_name:str):
+
 
     await interaction.response.defer(ephemeral=False)
 
@@ -506,13 +511,13 @@ async def profile(interaction: discord.Interaction, profile_name:str):
     else:
 
         # Construct and send the embed with profile information
-        embed = discord.Embed(title=f"LVL {user_profile['level']} - {interaction.user.display_name}")
-        embed.set_thumbnail(url=user_profile['lol_profile_picture'])
-        embed.add_field(name="Rank", value=f"{user_profile['rank_name']} - {user_profile['lp']} LP")
-        embed.add_field(name="Win/Loss", value=f"{user_profile['win']}W/{user_profile['loss']}L")
+        #embed = discord.Embed(title=f"LVL {user_profile['level']} - {interaction.user.display_name}")
+        #embed.set_thumbnail(url=user_profile['lol_profile_picture'])
+        #embed.add_field(name="Rank", value=f"{user_profile['rank_name']} - {user_profile['lp']} LP")
+        #embed.add_field(name="Win/Loss", value=f"{user_profile['win']}W/{user_profile['loss']}L")
 
-        await interaction.followup.send(embed=embed, ephemeral=False)
+        #await interaction.followup.send(embed=embed, ephemeral=False)
 
-    return
+        return
 
 bot.run(TOKEN)
