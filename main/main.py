@@ -215,7 +215,6 @@ async def help(interaction: discord.Interaction):
     app_commands.Choice(name = "VN", value = "VN")
 
 ])
-
 async def setProfile(interaction: discord.Interaction, region: app_commands.Choice[str], username: app_commands.Range[str, 3, 16], main_champion: app_commands.Range[str, 3, 14]):
 
     await interaction.response.defer(ephemeral = False)
@@ -489,6 +488,31 @@ async def overview(interaction: discord.Interaction, champion_name: str, role: O
     embed.add_field(name = "Matches", value =  f"{total_matches}")
 
     await interaction.followup.send(embed = embed)
+    return
+
+
+@bot.tree.command(name = "profile", description = "Check if the user has a profile in our database")
+async def profile(interaction: discord.Interaction, champion_name:str):
+
+    await interaction.response.defer(ephemeral=False)
+
+    # Retrieve user's profile from the database
+    user_profile = ""
+
+    if user_profile is None:
+
+        await interaction.followup.send("You don't have a profile. Create one using /set_profile!", ephemeral=True)
+        
+    else:
+
+        # Construct and send the embed with profile information
+        embed = discord.Embed(title=f"LVL {user_profile['level']} - {interaction.user.display_name}")
+        embed.set_thumbnail(url=user_profile['lol_profile_picture'])
+        embed.add_field(name="Rank", value=f"{user_profile['rank_name']} - {user_profile['lp']} LP")
+        embed.add_field(name="Win/Loss", value=f"{user_profile['win']}W/{user_profile['loss']}L")
+
+        await interaction.followup.send(embed=embed, ephemeral=False)
+
     return
 
 bot.run(TOKEN)
