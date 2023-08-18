@@ -485,7 +485,7 @@ async def overview(interaction: discord.Interaction, champion_name: str, role: O
 
     if queue_type.name != "ARAM":
 
-        embed = discord.Embed(title = f"{champion_name_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**", color = 0x222247)
+        embed = discord.Embed(title = f"{champion_name_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**\n{rank.name}", color = 0x222247)
 
     else:
         
@@ -651,7 +651,14 @@ async def build(interaction: discord.Interaction, champion_name: str, role: Opti
 
     soup = await aio_get_soup(url)
 
-    perks = soup.find("div", "rune-trees-container-2 media-query media-query_MOBILE_LARGE__DESKTOP_LARGE").find_all("div", "perk-active")
+    try:
+
+        perks = soup.find("div", "rune-trees-container-2 media-query media-query_MOBILE_LARGE__DESKTOP_LARGE").find_all("div", "perk-active")
+
+    except AttributeError:
+
+        await interaction.followup.send(embed = embed_error(f"* No data was found for {champion_name_for_ui}!"))
+        return
 
     summoner_spells = soup.find("div", "summoner-spells").find_all("div", recursive = False)[1].find_all("img")
 
@@ -673,7 +680,9 @@ async def build(interaction: discord.Interaction, champion_name: str, role: Opti
 
     if queue_type.name != "ARAM":
 
-        embed = discord.Embed(title = f"{champion_name_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**", color = 0x222247)
+        role = soup.find("div", "role-value").div.text
+
+        embed = discord.Embed(title = f"{champion_name_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**\n{rank.name}", color = 0x222247)
 
     else:
         
@@ -696,24 +705,22 @@ async def build(interaction: discord.Interaction, champion_name: str, role: Opti
     embed.add_field(name = "Summoner Spells", value = f"{summoner_spell_text}")
 
     embed.add_field(name = "Skill Priority", value = f"{skill_priority[0].text} > {skill_priority[1].text} > {skill_priority[2].text}")
-    embed.add_field(name = "Skill Path", value =  f"{skill_path_names[0].text}{skill_path_array[0]}\n{skill_path_names[1].text}{skill_path_array[1]}\n{skill_path_names[2].text}{skill_path_array[2]}\n{skill_path_names[3].text}{skill_path_array[3]}")
+    embed.add_field(name = "Skill Path", value =  f"Q {skill_path_array[0]}\nW {skill_path_array[1]}\nE {skill_path_array[2]}\nR {skill_path_array[3]}")
 
     await interaction.followup.send(embed = embed)
     return
 
 
-@bot.tree.command(name = "profile", description = "Check if the user has a profile in our database")
-async def retrieve_user_profile(profile_name):
-    pass
-async def profile(interaction: discord.Interaction, profile_name:str):
+@bot.tree.command(name = "profile", description = "Retrieve your profile data from our database!")
+async def profile(interaction: discord.Interaction):
 
 
     await interaction.response.defer(ephemeral=False)
 
     # Retrieve user's profile from the database
-    user_profile = retrieve_user_profile(profile_name)
+    discord_profile = interaction.user.id
 
-    if user_profile is None:
+    if discord_profile is None:
 
         await interaction.followup.send("You don't have a profile. Create one using /set_profile!", ephemeral=True)
         
