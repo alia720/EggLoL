@@ -145,13 +145,26 @@ def get_region_for_url(region):
 
     return regions[region]
 
-def edit_skill_path_array(div, skill_path_array, row_index, div_index):
-    
+def edit_skill_path_grid(div, skill_path_grid, row_index):
+
+    row_mapping = {
+
+        0: "<:q_:1142021169961259038>",
+        1: "<:w_:1142021171278250064>",
+        2: "<:e_:1142021173253779526>",
+        3: "<:r_:1142021174415605811>" 
+
+    }
+
     if "skill-up" in div["class"]:
 
-        skill_path_array[row_index][div_index] = div.div.text
+        skill_path_grid += row_mapping[row_index]
 
-    return skill_path_array
+    else: 
+
+        skill_path_grid += "<:gs:1142000576721322077>"
+
+    return skill_path_grid
     
 # Asynchronous functions
 
@@ -653,36 +666,40 @@ async def build(interaction: discord.Interaction, champion_name: str, role: Opti
 
     try:
 
-        perks = soup.find("div", "rune-trees-container-2 media-query media-query_MOBILE_LARGE__DESKTOP_LARGE").find_all("div", "perk-active")
+        runes = soup.find("div", "rune-trees-container-2 media-query media-query_MOBILE_LARGE__DESKTOP_LARGE").find_all("div", "perk-active")
+        runes_wr_matches_div = soup.find("div", "recommended-build_runes")
+        runes_wr = runes_wr_matches_div.find("span", "win-rate").text
+        runes_matches = runes_wr_matches_div.find("span", "matches").text
 
     except AttributeError:
 
         await interaction.followup.send(embed = embed_error(f"* No data was found for {champion_name_for_ui}!"))
         return
 
-    summoner_spells = soup.find("div", "summoner-spells").find_all("div", recursive = False)[1].find_all("img")
+    summoner_spells_div = soup.find("div", "summoner-spells")
+    summoner_spells = summoner_spells_div.find_all("div", recursive = False)[1].find_all("img")
+    summoner_spells_wr = summoner_spells_div.find("span", "win-rate").text
+    summoner_spells_matches = summoner_spells_div.find("span", "matches").text
 
-    skill_priority = soup.find("div", "skill-priority-path").find_all("div", "skill-label")
+    skill_priority_div = soup.find("div", "skill-priority_content")
+    skill_priority = skill_priority_div.find("div", "skill-priority-path").find_all("div", "skill-label")
+    skill_priority_wr = skill_priority_div.find("div", "winrate").span.text
+    skill_priority_matches = skill_priority_div.find("div", "matches").text
 
     skill_path = soup.find("div", "skill-path-container")
-
-    skill_path_names = skill_path.find_all("div", "skill-name")
-
     skill_path_rows = skill_path.find_all("div", "skill-order")[:4]
-
-    skill_path_array = np.zeros((4, 18), dtype = int)
-
-    for row_index, row in enumerate(skill_path_rows):
-
-        for div_index, div in enumerate(row):
-
-            skill_path_array = edit_skill_path_array(div, skill_path_array, row_index, div_index)
 
     if queue_type.name != "ARAM":
 
         role = soup.find("div", "role-value").div.text
 
-        embed = discord.Embed(title = f"{champion_name_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**\n{rank.name}", color = 0x222247)
+        if queue_type.name == "Ranked Solo/Duo" or queue_type.name == "Ranked Flex":
+
+            embed = discord.Embed(title = f"{champion_name_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**\n{rank.name}", color = 0x222247)
+
+        else:
+
+            embed = discord.Embed(title = f"{champion_name_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**", color = 0x222247)
 
     else:
         
@@ -690,11 +707,9 @@ async def build(interaction: discord.Interaction, champion_name: str, role: Opti
 
     runes_text = ""
 
-    for perk in perks:
+    for rune in runes:
 
-        runes_text += perk.img["alt"] + "\n"
-
-    embed.add_field(name = "Runes", value = f"{runes_text}")
+        runes_text += rune.img["alt"] + "\n"
     
     summoner_spell_text = ""
 
@@ -702,14 +717,34 @@ async def build(interaction: discord.Interaction, champion_name: str, role: Opti
 
         summoner_spell_text += summoner_spell["alt"] + "\n"
 
-    embed.add_field(name = "Summoner Spells", value = f"{summoner_spell_text}")
+    skill_priority_mapping = {
 
-    embed.add_field(name = "Skill Priority", value = f"{skill_priority[0].text} > {skill_priority[1].text} > {skill_priority[2].text}")
-    embed.add_field(name = "Skill Path", value =  f"Q {skill_path_array[0]}\nW {skill_path_array[1]}\nE {skill_path_array[2]}\nR {skill_path_array[3]}")
+        "Q": "<:q_:1142021169961259038>",
+        "W": "<:w_:1142021171278250064>",
+        "E": "<:e_:1142021173253779526>"
+
+    }
+
+    embed.add_field(name = f"Runes | {runes_wr}{runes_matches}", value = f"{runes_text}")
+    embed.add_field(name = f"Summoner Spells | {summoner_spells_wr}{summoner_spells_matches}", value = f"{summoner_spell_text}")
+    embed.add_field(name = f"Skill Priority | {skill_priority_wr} WR ({skill_priority_matches})", value = f"{skill_priority_mapping[skill_priority[0].text]} > {skill_priority_mapping[skill_priority[1].text]} > {skill_priority_mapping[skill_priority[2].text]}", inline = False)
+    embed.add_field(name = "Skill Path", value = "", inline = False)
+    embed.add_field(name = "", value = "<:1_:1142013758198251528><:2_:1142014838734856276><:3_:1142014837010993172><:4_:1142014822335139893><:5_:1142014801162281001><:6_:1142014789279809559><:7_:1142014755389845575><:8_:1142014739065618462><:9_:1142015195632386109><:10:1142015179765321781><:11:1142015164749729823><:12:1142015156587614259><:13:1142015154989580311><:14:1142015150661062698><:15:1142015148056387634><:16:1142015131912503358><:17:1142015121154121779><:18:1142015119560282192>", inline = False)
+
+    skill_path_grid = ""
+
+    for row_index, row in enumerate(skill_path_rows):
+
+        for div in row:
+
+            skill_path_grid = edit_skill_path_grid(div, skill_path_grid, row_index)
+
+        skill_path_grid += "\n"
+        embed.add_field(name = "", value = f"{skill_path_grid}", inline = False)
+        skill_path_grid = ""
 
     await interaction.followup.send(embed = embed)
     return
-
 
 @bot.tree.command(name = "profile", description = "Retrieve your profile data from our database!")
 async def profile(interaction: discord.Interaction):
