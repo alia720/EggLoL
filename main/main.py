@@ -6,6 +6,7 @@ import configparser
 import psycopg2
 import lxml
 import simplejson as json
+import numpy as np
 from uuid_extensions import uuid7
 from psycopg2 import Error
 from psycopg2 import IntegrityError
@@ -143,6 +144,14 @@ def get_region_for_url(region):
         regions = json.load(file)
 
     return regions[region]
+
+def edit_skill_path_array(div, skill_path_array, row_index, div_index):
+    
+    if "skill-up" in div["class"]:
+
+        skill_path_array[row_index][div_index] = div.div.text
+
+    return skill_path_array
     
 # Asynchronous functions
 
@@ -216,7 +225,7 @@ async def help(interaction: discord.Interaction):
 
 ])
 
-async def setProfile(interaction: discord.Interaction, region: app_commands.Choice[str], username: app_commands.Range[str, 3, 16], main_champion: app_commands.Range[str, 3, 14]):
+async def set_profile(interaction: discord.Interaction, region: app_commands.Choice[str], username: app_commands.Range[str, 3, 16], main_champion: app_commands.Range[str, 3, 14]):
 
     await interaction.response.defer(ephemeral = False)
     #
@@ -308,7 +317,7 @@ async def setProfile(interaction: discord.Interaction, region: app_commands.Choi
     return
 
 @bot.tree.command(name = "overview", description = "Get an overview of the champion in your specific rank, region and role!")
-@app_commands.describe(champion_name = "Champion name for info")
+@app_commands.describe(champion_name = "Champion to get overview for")
 @app_commands.choices(
     
     role = [
@@ -371,6 +380,7 @@ async def setProfile(interaction: discord.Interaction, region: app_commands.Choi
 
     ]
 )
+
 async def overview(interaction: discord.Interaction, champion_name: str, role: Optional[app_commands.Choice[str]] = None, rank: Optional[app_commands.Choice[str]] = '{"name": "Emerald +"}',  queue_type: Optional[app_commands.Choice[str]] = '{"name": "Ranked Solo/Duo"}', region: Optional[app_commands.Choice[str]] = '{"name": "World", "value": "World"}'):
 
     await interaction.response.defer(ephemeral = False)
@@ -487,6 +497,206 @@ async def overview(interaction: discord.Interaction, champion_name: str, role: O
     embed.add_field(name = "Pick Rate", value =  f"{pick_rate}")
     embed.add_field(name = "Ban Rate", value =  f"{ban_rate}")
     embed.add_field(name = "Matches", value =  f"{total_matches}")
+
+    await interaction.followup.send(embed = embed)
+    return
+
+@bot.tree.command(name = "build", description = "Get the complete build for the champion including the runes, summoner spells, items and more.")
+@app_commands.describe(champion_name = "Champion to get build for")
+@app_commands.choices(
+    
+    role = [
+    
+        app_commands.Choice(name = "Top", value = "top"),
+        app_commands.Choice(name = "Jungle", value = "jungle"),
+        app_commands.Choice(name = "Middle", value = "mid"),
+        app_commands.Choice(name = "Bot/ADC", value = "adc"),
+        app_commands.Choice(name = "Support", value = "support")
+
+    ],
+    rank = [
+
+        app_commands.Choice(name = "Platinum +", value = "platinum_plus"),
+        app_commands.Choice(name = "Emerald +", value = "emerald_plus"),
+        app_commands.Choice(name = "Diamond +", value = "diamond_plus"),
+        app_commands.Choice(name = "Diamond 2 +", value = "diamond_2_plus"),
+        app_commands.Choice(name = "Master +", value = "master_plus"),
+        app_commands.Choice(name = "All Ranks", value = "overall"),
+        app_commands.Choice(name = "Challenger", value = "challenger"),
+        app_commands.Choice(name = "Grandmaster", value = "grandmaster"),
+        app_commands.Choice(name = "Master", value = "master"),
+        app_commands.Choice(name = "Diamond", value = "diamond"),
+        app_commands.Choice(name = "Emerald", value = "emerald"),
+        app_commands.Choice(name = "Platinum", value = "platinum"),
+        app_commands.Choice(name = "Gold", value = "gold"),
+        app_commands.Choice(name = "Silver", value = "silver"),
+        app_commands.Choice(name = "Bronze", value = "bronze"),
+        app_commands.Choice(name = "Iron", value = "iron")
+
+    ],
+    queue_type = [
+
+        app_commands.Choice(name = "Ranked Solo/Duo", value = ""),
+        app_commands.Choice(name = "ARAM", value = "aram"),
+        app_commands.Choice(name = "Ranked Flex", value = "ranked_flex_sr"),
+        app_commands.Choice(name = "Normal Blind", value = "normal_blind_5x5"),
+        app_commands.Choice(name = "Normal Draft", value = "normal_draft_5x5")
+
+    ],
+    region = [
+
+        app_commands.Choice(name = "World", value = "world"),
+        app_commands.Choice(name = "NA", value = "na1"),
+        app_commands.Choice(name = "EUW", value = "euw1"),
+        app_commands.Choice(name = "KR", value = "kr"),
+        app_commands.Choice(name = "BR", value = "br1"),
+        app_commands.Choice(name = "EUN", value = "eun1"),
+        app_commands.Choice(name = "JP", value = "jp1"),
+        app_commands.Choice(name = "LAN", value = "la1"),
+        app_commands.Choice(name = "LAS", value = "la2"),
+        app_commands.Choice(name = "OCE", value = "oc1"),
+        app_commands.Choice(name = "RU", value = "ru"),
+        app_commands.Choice(name = "TR", value = "tr1"),
+        app_commands.Choice(name = "PH", value = "ph1"),
+        app_commands.Choice(name = "SG", value = "sg2"),
+        app_commands.Choice(name = "TH", value = "th2"),
+        app_commands.Choice(name = "TW", value = "tw2"),
+        app_commands.Choice(name = "VN", value = "vn2")
+
+    ]
+)
+
+async def build(interaction: discord.Interaction, champion_name: str, role: Optional[app_commands.Choice[str]] = None, rank: Optional[app_commands.Choice[str]] = '{"name": "Emerald +"}',  queue_type: Optional[app_commands.Choice[str]] = '{"name": "Ranked Solo/Duo"}', region: Optional[app_commands.Choice[str]] = '{"name": "World", "value": "World"}'):
+
+    await interaction.response.defer(ephemeral = False)
+
+    if isinstance(region, str):
+
+        region_resp = query_get_data(f"SELECT region FROM discord_user JOIN lol_profile USING (profile_uuid) WHERE discord_user_id = {interaction.user.id}")
+
+        if region_resp != 400:
+
+            region = app_commands.Choice(name = region_resp[0], value = get_region_for_url(region_resp[0]))
+
+        else:
+
+            default_region_json = json.loads(region)
+
+            region = SimpleNamespace(**default_region_json)
+
+    if isinstance(queue_type, str):
+
+        default_queue_json = json.loads(queue_type)
+
+        queue_type = SimpleNamespace(**default_queue_json)
+
+    error_msg = ""
+
+    if queue_type.name == "ARAM" and role != None:
+
+        error_msg += f"* **ARAM** game mode does not have roles!\n"
+
+    if queue_type.name == "ARAM" and rank != '{"name": "Emerald +"}':
+
+        error_msg += f"* **ARAM** game mode does not have ranks!\n"
+
+    if (queue_type.name == "Normal Blind" or queue_type.name == "Normal Draft") and rank != '{"name": "Emerald +"}':
+
+        error_msg += f"* **Normal** game modes do not have ranks!\n"
+
+    if error_msg != "":
+
+        await interaction.followup.send(embed = embed_error(error_msg))
+        return
+
+    if is_valid_champion(champion_name) == False:
+
+        await interaction.followup.send(embed = embed_error(f"* **{champion_name}** is not a champion in League of Legends.\n"))
+        return
+
+    champion_name_for_url = get_champion_for_url(champion_name)
+    champion_name_for_ui = get_champion_for_ui(champion_name)
+
+    if queue_type.name != "ARAM":
+
+        url = f"https://u.gg/lol/champions/{champion_name_for_url}/build"
+
+        if role != None:
+
+            url += f"/{role.value}"
+
+        url += "?"
+
+        if isinstance(rank, str):
+
+            default_rank_json = json.loads(rank)
+
+            rank = SimpleNamespace(**default_rank_json)
+
+        if rank.name != "Emerald +":
+
+            url += f"rank={rank.value}&"
+
+        if queue_type.name != "Ranked Solo/Duo":
+
+            url += f"queueType={queue_type.value}&"
+
+    else:
+
+        url = f"https://u.gg/lol/champions/aram/{champion_name_for_url}-aram?"
+
+    if type(region) != SimpleNamespace:
+
+        url += f"region={region.value}"
+
+    soup = await aio_get_soup(url)
+
+    perks = soup.find("div", "rune-trees-container-2 media-query media-query_MOBILE_LARGE__DESKTOP_LARGE").find_all("div", "perk-active")
+
+    summoner_spells = soup.find("div", "summoner-spells").find_all("div", recursive = False)[1].find_all("img")
+
+    skill_priority = soup.find("div", "skill-priority-path").find_all("div", "skill-label")
+
+    skill_path = soup.find("div", "skill-path-container")
+
+    skill_path_names = skill_path.find_all("div", "skill-name")
+
+    skill_path_rows = skill_path.find_all("div", "skill-order")[:4]
+
+    skill_path_array = np.zeros((4, 18), dtype = int)
+
+    for row_index, row in enumerate(skill_path_rows):
+
+        for div_index, div in enumerate(row):
+
+            skill_path_array = edit_skill_path_array(div, skill_path_array, row_index, div_index)
+
+    if queue_type.name != "ARAM":
+
+        embed = discord.Embed(title = f"{champion_name_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**", color = 0x222247)
+
+    else:
+        
+        embed = discord.Embed(title = f"{champion_name_for_ui}", description = f"**{queue_type.name}** in **{region.name}**", color = 0x222247)
+
+    runes_text = ""
+
+    for perk in perks:
+
+        runes_text += perk.img["alt"] + "\n"
+
+    embed.add_field(name = "Runes", value = f"{runes_text}")
+    
+    summoner_spell_text = ""
+
+    for summoner_spell in summoner_spells:
+
+        summoner_spell_text += summoner_spell["alt"] + "\n"
+
+    embed.add_field(name = "Summoner Spells", value = f"{summoner_spell_text}")
+
+    embed.add_field(name = "Skill Priority", value = f"{skill_priority[0].text} > {skill_priority[1].text} > {skill_priority[2].text}")
+    embed.add_field(name = "Skill Path", value =  f"{skill_path_names[0].text}{skill_path_array[0]}\n{skill_path_names[1].text}{skill_path_array[1]}\n{skill_path_names[2].text}{skill_path_array[2]}\n{skill_path_names[3].text}{skill_path_array[3]}")
 
     await interaction.followup.send(embed = embed)
     return
