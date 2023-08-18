@@ -145,6 +145,100 @@ def get_region_for_url(region):
 
     return regions[region]
 
+def create_url(interaction, champion_name, role, rank, queue_type, region):
+
+    if isinstance(region, str):
+
+        region_resp = query_get_data(f"SELECT region FROM discord_user JOIN lol_profile USING (profile_uuid) WHERE discord_user_id = {interaction.user.id}")
+
+        if region_resp != 400:
+
+            region = app_commands.Choice(name = region_resp[0], value = get_region_for_url(region_resp[0]))
+
+        else:
+
+            default_region_json = json.loads(region)
+
+            region = SimpleNamespace(**default_region_json)
+
+    if isinstance(queue_type, str):
+
+        default_queue_json = json.loads(queue_type)
+
+        queue_type = SimpleNamespace(**default_queue_json)
+
+    error_msg = ""
+
+    if queue_type.name == "ARAM" and role != None:
+
+        error_msg += f"* **ARAM** game mode does not have roles!\n"
+
+    if queue_type.name == "ARAM" and rank != '{"name": "Emerald +"}':
+
+        error_msg += f"* **ARAM** game mode does not have ranks!\n"
+
+    if (queue_type.name == "Normal Blind" or queue_type.name == "Normal Draft") and rank != '{"name": "Emerald +"}':
+
+        error_msg += f"* **Normal** game modes do not have ranks!\n"
+
+    if error_msg != "":
+
+        url = None
+        champion_name_for_ui = None
+        rank = None
+        queue_type = None
+        region = None
+
+        return url, champion_name_for_ui, rank, queue_type, region, error_msg
+
+    if is_valid_champion(champion_name) == False:
+
+        url = None
+        champion_name_for_ui = None
+        rank = None
+        queue_type = None
+        region = None
+        error_msg += f"* **{champion_name}** is not a champion in League of Legends.\n"
+
+        return url, champion_name_for_ui, rank, queue_type, region, error_msg
+
+    champion_name_for_url = get_champion_for_url(champion_name)
+    champion_name_for_ui = get_champion_for_ui(champion_name)
+
+    if queue_type.name != "ARAM":
+
+        url = f"https://u.gg/lol/champions/{champion_name_for_url}/build"
+
+        if role != None:
+
+            url += f"/{role.value}"
+
+        url += "?"
+
+        if isinstance(rank, str):
+
+            default_rank_json = json.loads(rank)
+
+            rank = SimpleNamespace(**default_rank_json)
+
+        if rank.name != "Emerald +":
+
+            url += f"rank={rank.value}&"
+
+        if queue_type.name != "Ranked Solo/Duo":
+
+            url += f"queueType={queue_type.value}&"
+
+    else:
+
+        url = f"https://u.gg/lol/champions/aram/{champion_name_for_url}-aram?"
+
+    if type(region) != SimpleNamespace:
+
+        url += f"region={region.value}"
+
+    return url, champion_name_for_ui, rank, queue_type, region, error_msg
+
 def edit_skill_path_grid(div, skill_path_grid, row_index):
 
     row_mapping = {
@@ -398,84 +492,11 @@ async def overview(interaction: discord.Interaction, champion_name: str, role: O
 
     await interaction.response.defer(ephemeral = False)
 
-    if isinstance(region, str):
-
-        region_resp = query_get_data(f"SELECT region FROM discord_user JOIN lol_profile USING (profile_uuid) WHERE discord_user_id = {interaction.user.id}")
-
-        if region_resp != 400:
-
-            region = app_commands.Choice(name = region_resp[0], value = get_region_for_url(region_resp[0]))
-
-        else:
-
-            default_region_json = json.loads(region)
-
-            region = SimpleNamespace(**default_region_json)
-
-    if isinstance(queue_type, str):
-
-        default_queue_json = json.loads(queue_type)
-
-        queue_type = SimpleNamespace(**default_queue_json)
-
-    error_msg = ""
-
-    if queue_type.name == "ARAM" and role != None:
-
-        error_msg += f"* **ARAM** game mode does not have roles!\n"
-
-    if queue_type.name == "ARAM" and rank != '{"name": "Emerald +"}':
-
-        error_msg += f"* **ARAM** game mode does not have ranks!\n"
-
-    if (queue_type.name == "Normal Blind" or queue_type.name == "Normal Draft") and rank != '{"name": "Emerald +"}':
-
-        error_msg += f"* **Normal** game modes do not have ranks!\n"
+    url, champion_name_for_ui, rank, queue_type, region, error_msg = create_url(interaction, champion_name, role, rank, queue_type, region)
 
     if error_msg != "":
 
         await interaction.followup.send(embed = embed_error(error_msg))
-        return
-
-    if is_valid_champion(champion_name) == False:
-
-        await interaction.followup.send(embed = embed_error(f"* **{champion_name}** is not a champion in League of Legends.\n"))
-        return
-
-    champion_name_for_url = get_champion_for_url(champion_name)
-    champion_name_for_ui = get_champion_for_ui(champion_name)
-
-    if queue_type.name != "ARAM":
-
-        url = f"https://u.gg/lol/champions/{champion_name_for_url}/build"
-
-        if role != None:
-
-            url += f"/{role.value}"
-
-        url += "?"
-
-        if isinstance(rank, str):
-
-            default_rank_json = json.loads(rank)
-
-            rank = SimpleNamespace(**default_rank_json)
-
-        if rank.name != "Emerald +":
-
-            url += f"rank={rank.value}&"
-
-        if queue_type.name != "Ranked Solo/Duo":
-
-            url += f"queueType={queue_type.value}&"
-
-    else:
-
-        url = f"https://u.gg/lol/champions/aram/{champion_name_for_url}-aram?"
-
-    if type(region) != SimpleNamespace:
-
-        url += f"region={region.value}"
 
     soup = await aio_get_soup(url)
 
@@ -583,93 +604,21 @@ async def build(interaction: discord.Interaction, champion_name: str, role: Opti
 
     await interaction.response.defer(ephemeral = False)
 
-    if isinstance(region, str):
-
-        region_resp = query_get_data(f"SELECT region FROM discord_user JOIN lol_profile USING (profile_uuid) WHERE discord_user_id = {interaction.user.id}")
-
-        if region_resp != 400:
-
-            region = app_commands.Choice(name = region_resp[0], value = get_region_for_url(region_resp[0]))
-
-        else:
-
-            default_region_json = json.loads(region)
-
-            region = SimpleNamespace(**default_region_json)
-
-    if isinstance(queue_type, str):
-
-        default_queue_json = json.loads(queue_type)
-
-        queue_type = SimpleNamespace(**default_queue_json)
-
-    error_msg = ""
-
-    if queue_type.name == "ARAM" and role != None:
-
-        error_msg += f"* **ARAM** game mode does not have roles!\n"
-
-    if queue_type.name == "ARAM" and rank != '{"name": "Emerald +"}':
-
-        error_msg += f"* **ARAM** game mode does not have ranks!\n"
-
-    if (queue_type.name == "Normal Blind" or queue_type.name == "Normal Draft") and rank != '{"name": "Emerald +"}':
-
-        error_msg += f"* **Normal** game modes do not have ranks!\n"
+    url, champion_name_for_ui, rank, queue_type, region, error_msg = create_url(interaction, champion_name, role, rank, queue_type, region)
 
     if error_msg != "":
 
         await interaction.followup.send(embed = embed_error(error_msg))
-        return
-
-    if is_valid_champion(champion_name) == False:
-
-        await interaction.followup.send(embed = embed_error(f"* **{champion_name}** is not a champion in League of Legends.\n"))
-        return
-
-    champion_name_for_url = get_champion_for_url(champion_name)
-    champion_name_for_ui = get_champion_for_ui(champion_name)
-
-    if queue_type.name != "ARAM":
-
-        url = f"https://u.gg/lol/champions/{champion_name_for_url}/build"
-
-        if role != None:
-
-            url += f"/{role.value}"
-
-        url += "?"
-
-        if isinstance(rank, str):
-
-            default_rank_json = json.loads(rank)
-
-            rank = SimpleNamespace(**default_rank_json)
-
-        if rank.name != "Emerald +":
-
-            url += f"rank={rank.value}&"
-
-        if queue_type.name != "Ranked Solo/Duo":
-
-            url += f"queueType={queue_type.value}&"
-
-    else:
-
-        url = f"https://u.gg/lol/champions/aram/{champion_name_for_url}-aram?"
-
-    if type(region) != SimpleNamespace:
-
-        url += f"region={region.value}"
 
     soup = await aio_get_soup(url)
 
     try:
 
-        runes = soup.find("div", "rune-trees-container-2 media-query media-query_MOBILE_LARGE__DESKTOP_LARGE").find_all("div", "perk-active")
-        runes_wr_matches_div = soup.find("div", "recommended-build_runes")
-        runes_wr = runes_wr_matches_div.find("span", "win-rate").text
-        runes_matches = runes_wr_matches_div.find("span", "matches").text
+        runes_div = soup.find("div", "recommended-build_runes")
+        runes = runes_div.find("div", "rune-trees-container-2 media-query media-query_MOBILE_LARGE__DESKTOP_LARGE").find_all("div", "perk-active")
+        shards = runes_div.find("div", "rune-trees-container-2 media-query media-query_MOBILE_LARGE__DESKTOP_LARGE").find_all("div", "shard-active")
+        runes_wr = runes_div.find("span", "win-rate").text
+        runes_matches = runes_div .find("span", "matches").text
 
     except AttributeError:
 
@@ -683,8 +632,16 @@ async def build(interaction: discord.Interaction, champion_name: str, role: Opti
 
     skill_priority_div = soup.find("div", "skill-priority_content")
     skill_priority = skill_priority_div.find("div", "skill-priority-path").find_all("div", "skill-label")
-    skill_priority_wr = skill_priority_div.find("div", "winrate").span.text
-    skill_priority_matches = skill_priority_div.find("div", "matches").text
+
+    try:
+
+        skill_priority_wr = skill_priority_div.find("div", "winrate").span.text
+        skill_priority_matches = skill_priority_div.find("div", "matches").text
+
+    except:
+
+        skill_priority_wr = "~%"
+        skill_priority_matches = "~ Matches"
 
     skill_path = soup.find("div", "skill-path-container")
     skill_path_rows = skill_path.find_all("div", "skill-order")[:4]
@@ -710,6 +667,10 @@ async def build(interaction: discord.Interaction, champion_name: str, role: Opti
     for rune in runes:
 
         runes_text += rune.img["alt"] + "\n"
+
+    for shard in shards:
+
+        runes_text += shard.img["alt"] + "\n"
     
     summoner_spell_text = ""
 
