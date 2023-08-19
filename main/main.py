@@ -235,7 +235,7 @@ def create_url(interaction, champion_name, role, rank, queue_type, region):
 
     if type(region) != SimpleNamespace:
 
-        url += f"region={region.value}"
+        url += f"region={region.value}&"
 
     return url, champion_name_for_ui, rank, queue_type, region, error_msg
 
@@ -707,7 +707,124 @@ async def build(interaction: discord.Interaction, champion_name: str, role: Opti
     await interaction.followup.send(embed = embed)
     return
 
-@bot.tree.command(name = "profile", description = "Retrieve your profile data from our database!")
+@bot.tree.command(name = "vs", description = "Get the complete build and WR for your champion vs. another champion!")
+@app_commands.describe(first_champion = "main_champion vs. first_champion OR first_champion vs. second_champion", second_champion = "first_champion vs. second_champion")
+@app_commands.choices(
+    
+    role = [
+    
+        app_commands.Choice(name = "Top", value = "top"),
+        app_commands.Choice(name = "Jungle", value = "jungle"),
+        app_commands.Choice(name = "Middle", value = "mid"),
+        app_commands.Choice(name = "Bot/ADC", value = "adc"),
+        app_commands.Choice(name = "Support", value = "support")
+
+    ],
+    rank = [
+
+        app_commands.Choice(name = "Platinum +", value = "platinum_plus"),
+        app_commands.Choice(name = "Emerald +", value = "emerald_plus"),
+        app_commands.Choice(name = "Diamond +", value = "diamond_plus"),
+        app_commands.Choice(name = "Diamond 2 +", value = "diamond_2_plus"),
+        app_commands.Choice(name = "Master +", value = "master_plus"),
+        app_commands.Choice(name = "All Ranks", value = "overall"),
+        app_commands.Choice(name = "Challenger", value = "challenger"),
+        app_commands.Choice(name = "Grandmaster", value = "grandmaster"),
+        app_commands.Choice(name = "Master", value = "master"),
+        app_commands.Choice(name = "Diamond", value = "diamond"),
+        app_commands.Choice(name = "Emerald", value = "emerald"),
+        app_commands.Choice(name = "Platinum", value = "platinum"),
+        app_commands.Choice(name = "Gold", value = "gold"),
+        app_commands.Choice(name = "Silver", value = "silver"),
+        app_commands.Choice(name = "Bronze", value = "bronze"),
+        app_commands.Choice(name = "Iron", value = "iron")
+
+    ],
+    queue_type = [
+
+        app_commands.Choice(name = "Ranked Solo/Duo", value = ""),
+        app_commands.Choice(name = "ARAM", value = "aram"),
+        app_commands.Choice(name = "Ranked Flex", value = "ranked_flex_sr"),
+        app_commands.Choice(name = "Normal Blind", value = "normal_blind_5x5"),
+        app_commands.Choice(name = "Normal Draft", value = "normal_draft_5x5")
+
+    ],
+    region = [
+
+        app_commands.Choice(name = "World", value = "world"),
+        app_commands.Choice(name = "NA", value = "na1"),
+        app_commands.Choice(name = "EUW", value = "euw1"),
+        app_commands.Choice(name = "KR", value = "kr"),
+        app_commands.Choice(name = "BR", value = "br1"),
+        app_commands.Choice(name = "EUN", value = "eun1"),
+        app_commands.Choice(name = "JP", value = "jp1"),
+        app_commands.Choice(name = "LAN", value = "la1"),
+        app_commands.Choice(name = "LAS", value = "la2"),
+        app_commands.Choice(name = "OCE", value = "oc1"),
+        app_commands.Choice(name = "RU", value = "ru"),
+        app_commands.Choice(name = "TR", value = "tr1"),
+        app_commands.Choice(name = "PH", value = "ph1"),
+        app_commands.Choice(name = "SG", value = "sg2"),
+        app_commands.Choice(name = "TH", value = "th2"),
+        app_commands.Choice(name = "TW", value = "tw2"),
+        app_commands.Choice(name = "VN", value = "vn2")
+
+    ]
+)
+async def vs(interaction: discord.Interaction, first_champion: str, second_champion: Optional[str] = None, role: Optional[app_commands.Choice[str]] = None, rank: Optional[app_commands.Choice[str]] = '{"name": "Emerald +"}',  queue_type: Optional[app_commands.Choice[str]] = '{"name": "Ranked Solo/Duo"}', region: Optional[app_commands.Choice[str]] = '{"name": "World", "value": "World"}'):
+
+    await interaction.response.defer(ephemeral = False)
+
+    if second_champion == None:
+
+        if is_valid_champion(first_champion) == False:
+
+            await interaction.followup.send(embed = embed_error(f"* **{first_champion}** is not a champion in League of Legends.\n"))
+            return
+
+        my_champ = query_get_data(f"SELECT main_champion FROM discord_user JOIN lol_profile USING (profile_uuid) WHERE discord_user_id = {interaction.user.id};")
+
+        if my_champ == None:
+
+            await interaction.followup.send(embed = embed_error(f"* It appears that you have not set up your profile! If you would like to, use /set_profile. If you would like to use this function without setting up your profile, specify 'second_champion' when calling this function."))
+            return
+
+        opp = first_champion
+        
+    else:
+
+        error_msg = ""
+
+        if is_valid_champion(first_champion) == False:
+
+            error_msg += f"* **{first_champion}** is not a champion in League of Legends.\n"
+
+        if is_valid_champion(second_champion) == False:
+
+            error_msg += f"* **{second_champion}** is not a champion in League of Legends.\n"
+
+        if error_msg != "":
+
+            await interaction.followup.send(embed = embed_error(error_msg))
+            return
+        
+        my_champ = first_champion
+        opp = second_champion
+
+    # Checkpoint | 'my_champ' and 'opp' have been verified and assigned
+
+    url, champion_name_for_ui, rank, queue_type, region, error_msg = create_url(interaction, my_champ, role, rank, queue_type, region)
+
+    url += f"opp={opp}"
+
+    soup = await aio_get_soup(url)
+
+    embed = discord.Embed(title = "h", description = "n", color = 0xD13441)
+
+    await interaction.followup.send(embed = embed)
+    return
+
+@bot.tree.command(name = "profile", description = "Retrieve your profile data from our database or search for someone else's!")
 async def profile(interaction: discord.Interaction):
 
 
