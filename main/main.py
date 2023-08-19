@@ -259,7 +259,103 @@ def edit_skill_path_grid(div, skill_path_grid, row_index):
         skill_path_grid += "<:gs:1142000576721322077>"
 
     return skill_path_grid
+
+def get_build_data(soup, champion_name_for_ui):
+
+    try:
+
+        runes_div = soup.find("div", "recommended-build_runes")
+        runes = runes_div.find("div", "rune-trees-container-2 media-query media-query_MOBILE_LARGE__DESKTOP_LARGE").find_all("div", "perk-active")
+        shards = runes_div.find("div", "rune-trees-container-2 media-query media-query_MOBILE_LARGE__DESKTOP_LARGE").find_all("div", "shard-active")
+        runes_wr = runes_div.find("span", "win-rate").text
+        runes_matches = runes_div .find("span", "matches").text
+
+    except AttributeError:
+
+        return {"Error": f"* No data was found for {champion_name_for_ui}!"}
+
+    summoner_spells_div = soup.find("div", "summoner-spells")
+    summoner_spells = summoner_spells_div.find_all("div", recursive = False)[1].find_all("img")
+    summoner_spells_wr = summoner_spells_div.find("span", "win-rate").text
+    summoner_spells_matches = summoner_spells_div.find("span", "matches").text
+
+    skill_priority_div = soup.find("div", "skill-priority_content")
+    skill_priority = skill_priority_div.find("div", "skill-priority-path").find_all("div", "skill-label")
+
+    try:
+
+        skill_priority_wr = skill_priority_div.find("div", "winrate").span.text
+        skill_priority_matches = skill_priority_div.find("div", "matches").text
+
+    except:
+
+        skill_priority_wr = "~%"
+        skill_priority_matches = "~ Matches"
+
+    skill_path = soup.find("div", "skill-path-container")
+    skill_path_rows = skill_path.find_all("div", "skill-order")[:4]
+
+    return {
+
+        "runes": runes,
+        "shards": shards,
+        "runes_wr": runes_wr,
+        "runes_matches": runes_matches,
+        "summoner_spells": summoner_spells,
+        "summoner_spells_wr": summoner_spells_wr,
+        "summoner_spells_matches": summoner_spells_matches,
+        "skill_priority": skill_priority,
+        "skill_priority_wr": skill_priority_wr,
+        "skill_priority_matches": skill_priority_matches,
+        "skill_path_rows": skill_path_rows
+
+    }
+
+def get_build_embed(embed, build_data):
+
+    runes_text = ""
+
+    for rune in build_data["runes"]:
+
+        runes_text += rune.img["alt"] + "\n"
+
+    for shard in build_data["shards"]:
+
+        runes_text += shard.img["alt"] + "\n"
     
+    summoner_spell_text = ""
+
+    for summoner_spell in build_data["summoner_spells"]:
+
+        summoner_spell_text += summoner_spell["alt"] + "\n"
+
+    skill_priority_mapping = {
+
+        "Q": "<:q_:1142021169961259038>",
+        "W": "<:w_:1142021171278250064>",
+        "E": "<:e_:1142021173253779526>"
+
+    }
+
+    embed.add_field(name = f"Runes | {build_data['runes_wr']}{build_data['runes_matches']}", value = f"{runes_text}")
+    embed.add_field(name = f"Summoner Spells | {build_data['summoner_spells_wr']}{build_data['summoner_spells_matches']}", value = f"{summoner_spell_text}")
+    embed.add_field(name = f"Skill Priority | {build_data['skill_priority_wr']} WR ({build_data['skill_priority_matches']})", value = f"{skill_priority_mapping[build_data['skill_priority'][0].text]} > {skill_priority_mapping[build_data['skill_priority'][1].text]} > {skill_priority_mapping[build_data['skill_priority'][2].text]}", inline = False)
+    embed.add_field(name = "Skill Path", value = "", inline = False)
+    embed.add_field(name = "", value = "<:1_:1142013758198251528><:2_:1142014838734856276><:3_:1142014837010993172><:4_:1142014822335139893><:5_:1142014801162281001><:6_:1142014789279809559><:7_:1142014755389845575><:8_:1142014739065618462><:9_:1142015195632386109><:10:1142015179765321781><:11:1142015164749729823><:12:1142015156587614259><:13:1142015154989580311><:14:1142015150661062698><:15:1142015148056387634><:16:1142015131912503358><:17:1142015121154121779><:18:1142015119560282192>", inline = False)
+
+    skill_path_grid = ""
+
+    for row_index, row in enumerate(build_data["skill_path_rows"]):
+
+        for div in row:
+
+            skill_path_grid = edit_skill_path_grid(div, skill_path_grid, row_index)
+
+        skill_path_grid += "\n"
+        embed.add_field(name = "", value = f"{skill_path_grid}", inline = False)
+        skill_path_grid = ""
+
+    return embed
 # Asynchronous functions
 
 async def aio_get_soup(url):
@@ -497,8 +593,13 @@ async def overview(interaction: discord.Interaction, champion_name: str, role: O
     if error_msg != "":
 
         await interaction.followup.send(embed = embed_error(error_msg))
+        return
 
     soup = await aio_get_soup(url)
+
+    if queue_type.name != "ARAM":
+        
+        role = soup.find("div", "role-value").div.text
 
     try:
 
@@ -508,13 +609,10 @@ async def overview(interaction: discord.Interaction, champion_name: str, role: O
         pick_rate = soup.find("div", "pick-rate").div.text
         ban_rate = soup.find("div", "ban-rate").div.text
         total_matches = soup.find("div", "matches").div.text
-        if queue_type.name != "ARAM":
-        
-            role = soup.find("div", "role-value").div.text
     
     except AttributeError:
 
-        await interaction.followup.send(embed = embed_error(f"* No data was found for {champion_name_for_ui}!"))
+        await interaction.followup.send(embed = embed_error(f"* No data was found for {champion_name_for_ui} in the following criteria:\n * {region.name}\n * {queue_type.name}\n * {rank.name}\n * {role}"))
         return
 
     if queue_type.name != "ARAM":
@@ -609,46 +707,22 @@ async def build(interaction: discord.Interaction, champion_name: str, role: Opti
     if error_msg != "":
 
         await interaction.followup.send(embed = embed_error(error_msg))
+        return
 
     soup = await aio_get_soup(url)
 
-    try:
-
-        runes_div = soup.find("div", "recommended-build_runes")
-        runes = runes_div.find("div", "rune-trees-container-2 media-query media-query_MOBILE_LARGE__DESKTOP_LARGE").find_all("div", "perk-active")
-        shards = runes_div.find("div", "rune-trees-container-2 media-query media-query_MOBILE_LARGE__DESKTOP_LARGE").find_all("div", "shard-active")
-        runes_wr = runes_div.find("span", "win-rate").text
-        runes_matches = runes_div .find("span", "matches").text
-
-    except AttributeError:
-
-        await interaction.followup.send(embed = embed_error(f"* No data was found for {champion_name_for_ui}!"))
-        return
-
-    summoner_spells_div = soup.find("div", "summoner-spells")
-    summoner_spells = summoner_spells_div.find_all("div", recursive = False)[1].find_all("img")
-    summoner_spells_wr = summoner_spells_div.find("span", "win-rate").text
-    summoner_spells_matches = summoner_spells_div.find("span", "matches").text
-
-    skill_priority_div = soup.find("div", "skill-priority_content")
-    skill_priority = skill_priority_div.find("div", "skill-priority-path").find_all("div", "skill-label")
-
-    try:
-
-        skill_priority_wr = skill_priority_div.find("div", "winrate").span.text
-        skill_priority_matches = skill_priority_div.find("div", "matches").text
-
-    except:
-
-        skill_priority_wr = "~%"
-        skill_priority_matches = "~ Matches"
-
-    skill_path = soup.find("div", "skill-path-container")
-    skill_path_rows = skill_path.find_all("div", "skill-order")[:4]
+    build_data = get_build_data(soup, champion_name_for_ui)
 
     if queue_type.name != "ARAM":
-
+        
         role = soup.find("div", "role-value").div.text
+
+    if "Error" in build_data:
+
+        await interaction.followup.send(embed = embed_error(f"{build_data['Error'][:-1]} in the following criteria:\n * {region.name}\n * {queue_type.name}\n * {rank.name}\n * {role}"))
+        return
+
+    if queue_type.name != "ARAM":
 
         if queue_type.name == "Ranked Solo/Duo" or queue_type.name == "Ranked Flex":
 
@@ -662,49 +736,9 @@ async def build(interaction: discord.Interaction, champion_name: str, role: Opti
         
         embed = discord.Embed(title = f"{champion_name_for_ui}", description = f"**{queue_type.name}** in **{region.name}**", color = 0x222247)
 
-    runes_text = ""
+    build_embed = get_build_embed(embed, build_data)
 
-    for rune in runes:
-
-        runes_text += rune.img["alt"] + "\n"
-
-    for shard in shards:
-
-        runes_text += shard.img["alt"] + "\n"
-    
-    summoner_spell_text = ""
-
-    for summoner_spell in summoner_spells:
-
-        summoner_spell_text += summoner_spell["alt"] + "\n"
-
-    skill_priority_mapping = {
-
-        "Q": "<:q_:1142021169961259038>",
-        "W": "<:w_:1142021171278250064>",
-        "E": "<:e_:1142021173253779526>"
-
-    }
-
-    embed.add_field(name = f"Runes | {runes_wr}{runes_matches}", value = f"{runes_text}")
-    embed.add_field(name = f"Summoner Spells | {summoner_spells_wr}{summoner_spells_matches}", value = f"{summoner_spell_text}")
-    embed.add_field(name = f"Skill Priority | {skill_priority_wr} WR ({skill_priority_matches})", value = f"{skill_priority_mapping[skill_priority[0].text]} > {skill_priority_mapping[skill_priority[1].text]} > {skill_priority_mapping[skill_priority[2].text]}", inline = False)
-    embed.add_field(name = "Skill Path", value = "", inline = False)
-    embed.add_field(name = "", value = "<:1_:1142013758198251528><:2_:1142014838734856276><:3_:1142014837010993172><:4_:1142014822335139893><:5_:1142014801162281001><:6_:1142014789279809559><:7_:1142014755389845575><:8_:1142014739065618462><:9_:1142015195632386109><:10:1142015179765321781><:11:1142015164749729823><:12:1142015156587614259><:13:1142015154989580311><:14:1142015150661062698><:15:1142015148056387634><:16:1142015131912503358><:17:1142015121154121779><:18:1142015119560282192>", inline = False)
-
-    skill_path_grid = ""
-
-    for row_index, row in enumerate(skill_path_rows):
-
-        for div in row:
-
-            skill_path_grid = edit_skill_path_grid(div, skill_path_grid, row_index)
-
-        skill_path_grid += "\n"
-        embed.add_field(name = "", value = f"{skill_path_grid}", inline = False)
-        skill_path_grid = ""
-
-    await interaction.followup.send(embed = embed)
+    await interaction.followup.send(embed = build_embed)
     return
 
 @bot.tree.command(name = "vs", description = "Get the complete build and WR for your champion vs. another champion!")
@@ -743,10 +777,7 @@ async def build(interaction: discord.Interaction, champion_name: str, role: Opti
     queue_type = [
 
         app_commands.Choice(name = "Ranked Solo/Duo", value = ""),
-        app_commands.Choice(name = "ARAM", value = "aram"),
         app_commands.Choice(name = "Ranked Flex", value = "ranked_flex_sr"),
-        app_commands.Choice(name = "Normal Blind", value = "normal_blind_5x5"),
-        app_commands.Choice(name = "Normal Draft", value = "normal_draft_5x5")
 
     ],
     region = [
@@ -782,9 +813,9 @@ async def vs(interaction: discord.Interaction, first_champion: str, second_champ
             await interaction.followup.send(embed = embed_error(f"* **{first_champion}** is not a champion in League of Legends.\n"))
             return
 
-        my_champ = query_get_data(f"SELECT main_champion FROM discord_user JOIN lol_profile USING (profile_uuid) WHERE discord_user_id = {interaction.user.id};")
+        my_champion = query_get_data(f"SELECT main_champion FROM discord_user JOIN lol_profile USING (profile_uuid) WHERE discord_user_id = {interaction.user.id};")[0]
 
-        if my_champ == None:
+        if my_champion == None:
 
             await interaction.followup.send(embed = embed_error(f"* It appears that you have not set up your profile! If you would like to, use /set_profile. If you would like to use this function without setting up your profile, specify 'second_champion' when calling this function."))
             return
@@ -808,20 +839,35 @@ async def vs(interaction: discord.Interaction, first_champion: str, second_champ
             await interaction.followup.send(embed = embed_error(error_msg))
             return
         
-        my_champ = first_champion
+        my_champion = first_champion
         opp = second_champion
 
-    # Checkpoint | 'my_champ' and 'opp' have been verified and assigned
+    # Checkpoint | 'my_champion' and 'opp' have been verified and assigned
 
-    url, champion_name_for_ui, rank, queue_type, region, error_msg = create_url(interaction, my_champ, role, rank, queue_type, region)
+    url, my_champion_for_ui, rank, queue_type, region, error_msg = create_url(interaction, my_champion, role, rank, queue_type, region)
 
-    url += f"opp={opp}"
+    url += f"opp={get_champion_for_url(opp)}"
 
     soup = await aio_get_soup(url)
 
-    embed = discord.Embed(title = "h", description = "n", color = 0xD13441)
+    build_data = get_build_data(soup, my_champion_for_ui)
 
-    await interaction.followup.send(embed = embed)
+    role = soup.find("div", "role-value").div.text
+
+    if "Error" in build_data:
+
+        await interaction.followup.send(embed = embed_error(f"{build_data['Error'][:-1]} vs. {get_champion_for_ui(opp)} in the following criteria:\n * {region.name}\n * {queue_type.name}\n * {rank.name}\n * {role}"))
+        return
+
+    embed = discord.Embed(title = f"{my_champion_for_ui} vs. {get_champion_for_ui(opp)} | {role}", description = f"**{queue_type.name}** in **{region.name}**\n{rank.name}", color = 0xD13441)
+
+    embed.add_field(name = "WR", value = f"{soup.find('div', 'champion-ranking-stats-normal').find('div', 'win-rate').div.text}")
+    embed.add_field(name = "Matches", value = f"{soup.find('div', 'champion-ranking-stats-normal').find('div', 'matches-oppid').div.text}")
+    embed.add_field(name = "", value = "", inline = False)
+
+    build_embed = get_build_embed(embed, build_data)
+
+    await interaction.followup.send(embed = build_embed)
     return
 
 @bot.tree.command(name = "profile", description = "Retrieve your profile data from our database or search for someone else's!")
@@ -835,7 +881,9 @@ async def profile(interaction: discord.Interaction):
 
     if discord_profile is None:
 
+        # Use the embed_error(msg) function to create your error messages
         await interaction.followup.send("You don't have a profile. Create one using /set_profile!", ephemeral=True)
+        return
         
     else:
 
