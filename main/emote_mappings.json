@@ -1,0 +1,43 @@
+{
+
+    "Rank": {
+
+        "Iron":                 "<:iron:1137288716390514720>",
+        "Bronze":               "<:bronze:1137288702930976820>",
+        "Silver":               "<:silver:1137288721419481099>",
+        "Gold":                 "<:gold:1137288711470600313>",
+        "Platinum":             "<:platinum:1137288720115052615>",
+        "Emerald":              "<:emerald:1137288708941422622>",
+        "Diamond":              "<:diamond:1137288707200786474>",
+        "Master":               "<:master:1137288718709956648>",
+        "Grandmaster":          "<:grandmaster:1137288714041708586>",
+        "Challenger":           "<:challenger:1137288705183330334>"
+
+    },
+
+    "Shard": {
+
+        "Adaptive Force":       "<:adaptive_force:1137289044502515823>",
+        "Armor":                "<:armor:1137289047027482765>",
+        "Attack Speed":         "<:attack_speed:1137289048151564319>",
+        "Scaling CDR":          "<:cdr:1137289049338556499>",
+        "Scaling Bonus Health": "<:hp:1137289051200835584>",
+        "Magic Resist":         "<:mr:1137289052467515442>"
+
+    },
+
+    "Summoner Spell": {
+
+        "Barrier":              "<:SummonerBarrier:1137288809369845770>",
+        "Cleanse":              "<:SummonerCleanse:1137288810451963985>",
+        "Exhaust":              "<:SummonerExhaust:1137288812360368188>",
+        "Flash":                "<:SummonerFlash:1137288813576716338>",
+        "Ghost":                "<:SummonerGhost:1137288815514497025>",
+        "Heal":                 "<:SummonerHeal:1137288817565511690>",
+        "Ignite":               "<:SummonerIgnite:1137288818974793748>",
+        "Smite":                "<:SummonerSmite:1137288820954497114>",
+        "Teleport":             "<:SummonerTeleport:1137288822602866759>"
+
+    }
+
+}

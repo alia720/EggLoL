@@ -2,24 +2,24 @@
 
     "champions_for_url": {
 
-        "Aurelion Sol": "aurelionsol",
-        "Bel'Veth": "belveth",
-        "Cho'Gath": "chogath",
-        "Dr. Mundo": "drmundo",
-        "Jarvan IV": "jarvan",
-        "K'Sante": "ksante",
-        "Kai'Sa": "kaisa",
-        "Kha'Zix": "khazix",
-        "Kog'Maw": "kogmaw",
-        "Master Yi": "masteryi",
-        "Miss Fortune": "missfortune",
-        "Nunu & Willump": "nunu",
-        "Rek'Sai": "reksai",
-        "Renata Glasc": "renata",
-        "Tahm Kench": "tahmkench",
-        "Twisted Fate": "twistedfate",
-        "Vel'Koz": "velkoz",
-        "Xin Zhao": "xinzhao"
+        "Aurelion Sol":     "aurelionsol",
+        "Bel'Veth":         "belveth",
+        "Cho'Gath":         "chogath",
+        "Dr. Mundo":        "drmundo",
+        "Jarvan IV":        "jarvan",
+        "K'Sante":          "ksante",
+        "Kai'Sa":           "kaisa",
+        "Kha'Zix":          "khazix",
+        "Kog'Maw":          "kogmaw",
+        "Master Yi":        "masteryi",
+        "Miss Fortune":     "missfortune",
+        "Nunu & Willump":   "nunu",
+        "Rek'Sai":          "reksai",
+        "Renata Glasc":     "renata",
+        "Tahm Kench":       "tahmkench",
+        "Twisted Fate":     "twistedfate",
+        "Vel'Koz":          "velkoz",
+        "Xin Zhao":         "xinzhao"
 
     },
 
