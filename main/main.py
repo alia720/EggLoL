@@ -145,6 +145,14 @@ def get_region_for_url(region):
 
     return regions[region]
 
+def get_emote(emote_for, key):
+
+    with open("main/emote_mappings.json") as file:
+
+        mappings = json.load(file)
+
+    return mappings[emote_for][key]
+
 def create_url(interaction, champion_name, role, rank, queue_type, region):
 
     if isinstance(region, str):
@@ -617,11 +625,15 @@ async def overview(interaction: discord.Interaction, champion_name: str, role: O
 
     if queue_type.name != "ARAM":
 
-        embed = discord.Embed(title = f"{champion_name_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**\n{rank.name}", color = 0x222247)
+        embed = discord.Embed(title = f"{champion_name_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**\n{rank.name}", url = url,  color = 0x222247)
 
     else:
         
-        embed = discord.Embed(title = f"{champion_name_for_ui}", description = f"**{queue_type.name}** in **{region.name}**", color = 0x222247)
+        embed = discord.Embed(title = f"{champion_name_for_ui}", description = f"**{queue_type.name}** in **{region.name}**", url = url,  color = 0x222247)
+
+    champion_icon_dir = get_emote("Champion", champion_name_for_ui)
+    champion_icon = discord.File(champion_icon_dir, filename = f"{champion_icon_dir.split('/')[-1]}")
+    embed.set_thumbnail(url = f"attachment://{champion_icon_dir.split('/')[-1]}")
 
     embed.add_field(name = "Tier", value =  f"{tier}")
     embed.add_field(name = "Win Rate", value =  f"{win_rate}")
@@ -630,7 +642,9 @@ async def overview(interaction: discord.Interaction, champion_name: str, role: O
     embed.add_field(name = "Ban Rate", value =  f"{ban_rate}")
     embed.add_field(name = "Matches", value =  f"{total_matches}")
 
-    await interaction.followup.send(embed = embed)
+    embed.set_footer(text = f"Powered by U.GG", icon_url = "https://pbs.twimg.com/profile_images/1146442344662798336/X1Daf_aS_400x400.png")
+
+    await interaction.followup.send(embed = embed, file = champion_icon)
     return
 
 @bot.tree.command(name = "build", description = "Get the complete build for the champion including the runes, summoner spells, items and more.")
@@ -726,19 +740,25 @@ async def build(interaction: discord.Interaction, champion_name: str, role: Opti
 
         if queue_type.name == "Ranked Solo/Duo" or queue_type.name == "Ranked Flex":
 
-            embed = discord.Embed(title = f"{champion_name_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**\n{rank.name}", color = 0x222247)
+            embed = discord.Embed(title = f"{champion_name_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**\n{rank.name}", url = url,  color = 0x222247)
 
         else:
 
-            embed = discord.Embed(title = f"{champion_name_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**", color = 0x222247)
+            embed = discord.Embed(title = f"{champion_name_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**", url = url,  color = 0x222247)
 
     else:
         
-        embed = discord.Embed(title = f"{champion_name_for_ui}", description = f"**{queue_type.name}** in **{region.name}**", color = 0x222247)
+        embed = discord.Embed(title = f"{champion_name_for_ui}", description = f"**{queue_type.name}** in **{region.name}**", url = url,  color = 0x222247)
+
+    champion_icon_dir = get_emote("Champion", champion_name_for_ui)
+    champion_icon = discord.File(champion_icon_dir, filename = f"{champion_icon_dir.split('/')[-1]}")
+    embed.set_thumbnail(url = f"attachment://{champion_icon_dir.split('/')[-1]}")
 
     build_embed = get_build_embed(embed, build_data)
 
-    await interaction.followup.send(embed = build_embed)
+    embed.set_footer(text = f"Powered by U.GG", icon_url = "https://pbs.twimg.com/profile_images/1146442344662798336/X1Daf_aS_400x400.png")
+
+    await interaction.followup.send(embed = build_embed, file = champion_icon)
     return
 
 @bot.tree.command(name = "vs", description = "Get the complete build and WR for your champion vs. another champion!")
@@ -859,7 +879,11 @@ async def vs(interaction: discord.Interaction, first_champion: str, second_champ
         await interaction.followup.send(embed = embed_error(f"{build_data['Error'][:-1]} vs. {get_champion_for_ui(opp)} in the following criteria:\n * {region.name}\n * {queue_type.name}\n * {rank.name}\n * {role}"))
         return
 
-    embed = discord.Embed(title = f"{my_champion_for_ui} vs. {get_champion_for_ui(opp)} | {role}", description = f"**{queue_type.name}** in **{region.name}**\n{rank.name}", color = 0xD13441)
+    embed = discord.Embed(title = f"{my_champion_for_ui} vs. {get_champion_for_ui(opp)} | {role}", description = f"**{queue_type.name}** in **{region.name}**\n{rank.name}", url = url, color = 0xD13441)
+
+    champion_icon_dir = get_emote("Champion", my_champion_for_ui)
+    champion_icon = discord.File(champion_icon_dir, filename = f"{champion_icon_dir.split('/')[-1]}")
+    embed.set_thumbnail(url = f"attachment://{champion_icon_dir.split('/')[-1]}")
 
     embed.add_field(name = "WR", value = f"{soup.find('div', 'champion-ranking-stats-normal').find('div', 'win-rate').div.text}")
     embed.add_field(name = "Matches", value = f"{soup.find('div', 'champion-ranking-stats-normal').find('div', 'matches-oppid').div.text}")
@@ -867,7 +891,9 @@ async def vs(interaction: discord.Interaction, first_champion: str, second_champ
 
     build_embed = get_build_embed(embed, build_data)
 
-    await interaction.followup.send(embed = build_embed)
+    embed.set_footer(text = f"Powered by U.GG", icon_url = "https://pbs.twimg.com/profile_images/1146442344662798336/X1Daf_aS_400x400.png")
+
+    await interaction.followup.send(embed = build_embed, file = champion_icon)
     return
 
 @bot.tree.command(name = "profile", description = "Retrieve your profile data from our database or search for someone else's!")
