@@ -273,6 +273,8 @@ def get_build_data(soup, champion_name_for_ui):
     try:
 
         runes_div = soup.find("div", "recommended-build_runes")
+        primary_tree = runes_div.find("div", "primary-tree").find("div", "perk-style-title").text
+        secondary_tree = runes_div.find("div", "secondary-tree").find("div", "perk-style-title").text
         runes = runes_div.find("div", "rune-trees-container-2 media-query media-query_MOBILE_LARGE__DESKTOP_LARGE").find_all("div", "perk-active")
         shards = runes_div.find("div", "rune-trees-container-2 media-query media-query_MOBILE_LARGE__DESKTOP_LARGE").find_all("div", "shard-active")
         runes_wr = runes_div.find("span", "win-rate").text
@@ -305,6 +307,8 @@ def get_build_data(soup, champion_name_for_ui):
 
     return {
 
+        "primary_tree": primary_tree,
+        "secondary_tree": secondary_tree,
         "runes": runes,
         "shards": shards,
         "runes_wr": runes_wr,
@@ -321,21 +325,40 @@ def get_build_data(soup, champion_name_for_ui):
 
 def get_build_embed(embed, build_data):
 
-    runes_text = ""
+    main_runes_text = ""
+    secondary_runes_text = ""
 
-    for rune in build_data["runes"]:
+    for rune_index, rune in enumerate(build_data["runes"]):
 
-        runes_text += rune.img["alt"] + "\n"
+        if rune_index == 0:
+
+            main_runes_text += f"{get_emote('Tree', build_data['primary_tree'])}  {build_data['primary_tree']}\n"
+
+            main_runes_text += f"{get_emote('Keystone', rune.img['alt'][13:])}  {rune.img['alt'][13:]}\n"
+
+        elif rune_index in range(1, 4):
+
+            main_runes_text += f"{get_emote('Rune', rune.img['alt'][9:])}  {rune.img['alt'][9:]}\n"
+
+        if rune_index == 4:
+
+            secondary_runes_text += f"{get_emote('Tree', build_data['secondary_tree'])}  {build_data['secondary_tree']}\n"
+
+        if rune_index in range(4, 6):
+
+            secondary_runes_text += f"{get_emote('Rune', rune.img['alt'][9:])}  {rune.img['alt'][9:]}\n"
+
+    shards_text = ""
 
     for shard in build_data["shards"]:
 
-        runes_text += shard.img["alt"] + "\n"
+        shards_text += f"{get_emote('Shard', shard.img['alt'][4:][:-6])}  {shard.img['alt'][4:][:-6]}\n"
     
     summoner_spell_text = ""
 
     for summoner_spell in build_data["summoner_spells"]:
 
-        summoner_spell_text += summoner_spell["alt"] + "\n"
+        summoner_spell_text += f"{get_emote('Summoner Spell', summoner_spell['alt'].split()[-1])} "
 
     skill_priority_mapping = {
 
@@ -345,7 +368,10 @@ def get_build_embed(embed, build_data):
 
     }
 
-    embed.add_field(name = f"Runes | {build_data['runes_wr']}{build_data['runes_matches']}", value = f"{runes_text}")
+    embed.add_field(name = f"Runes | {build_data['runes_wr']}{build_data['runes_matches']}", value = "", inline = False)
+    embed.add_field(name = "", value = f"{main_runes_text}")
+    embed.add_field(name = "", value = f"{secondary_runes_text}")
+    embed.add_field(name = "", value = f"{shards_text}")
     embed.add_field(name = f"Summoner Spells | {build_data['summoner_spells_wr']}{build_data['summoner_spells_matches']}", value = f"{summoner_spell_text}")
     embed.add_field(name = f"Skill Priority | {build_data['skill_priority_wr']} WR ({build_data['skill_priority_matches']})", value = f"{skill_priority_mapping[build_data['skill_priority'][0].text]} > {skill_priority_mapping[build_data['skill_priority'][1].text]} > {skill_priority_mapping[build_data['skill_priority'][2].text]}", inline = False)
     embed.add_field(name = "Skill Path", value = "", inline = False)
@@ -407,10 +433,8 @@ async def help(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral = False)
     #
 
-    embed = discord.Embed(title = "Test", color = 0xE8E1E1)
-
     #
-    await interaction.followup.send(embed = embed, ephemeral = False)
+    await interaction.followup.send(interaction.user._client_status)
     return
 
 @bot.tree.command(name = "set_profile", description = "For a more tailored experience, set up your LoL profile!")

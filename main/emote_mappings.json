@@ -15,6 +15,16 @@
 
     },
 
+    "Tree": {
+
+        "Domination":               "<:Domination_Tree:1142748377273090088>",
+        "Inspiration":              "<:Inspiration_Tree:1142747407906508881>",
+        "Precision":                "<:Precision_Tree:1142748356028944394>",
+        "Resolve":                  "<:Resolve_Tree:1142748335720124567>",
+        "Sorcery":                  "<:Sorcery_Tree:1142748402740891648>"
+
+    },
+
     "Keystone": {
 
         "Aftershock":               "<:Aftershock_keystone:1137290119406161970>",
@@ -29,8 +39,11 @@
         "Guardian":                 "<:Guardian_keystone:1137290122962935839>",
         "Hail of Blades":           "<:Hail_of_Blades_keystone:1137289203919630367>",
         "Lethal Tempo":             "<:Lethal_Tempo_keystone:1137290032609239080>",
+        "Phase Rush":               "<:Phase_Rush_keystone:1142745344174731304>",
         "Predator":                 "<:Predator_keystone:1137289207434465290>",
-        "Press the Attack":         "<:Press_the_Attack_keystone:1137290035721416704>"
+        "Press the Attack":         "<:Press_the_Attack_keystone:1137290035721416704>",
+        "Summon Aery":              "<:Summon_Aery_keystone:1142745346590654464>",
+        "Unsealed Spellbook":       "<:Unsealed_Spellbook_keystone:1137289966150496256>"
 
     },
 
@@ -55,9 +68,9 @@
         "Hextech Flashtraption":    "<:Hextech_Flashtraption_rune:1137292588458721300>",
         "Ingenious Hunter":         "<:Ingenious_Hunter_rune:1137292699448381480>",
         "Last Stand":               "<:Last_Stand_rune:1137292486675529859>",
-        "Legend Alacrity":          "<:Legend_Alacrity_rune:1137292487707340830>",
-        "Legend Bloodline":         "<:Legend_Bloodline_rune:1137292488814645329>",
-        "Legend Tenacity":          "<:Legend_Tenacity_rune:1137292490249080843>",
+        "Legend: Alacrity":         "<:Legend_Alacrity_rune:1137292487707340830>",
+        "Legend: Bloodline":        "<:Legend_Bloodline_rune:1137292488814645329>",
+        "Legend: Tenacity":         "<:Legend_Tenacity_rune:1137292490249080843>",
         "Magical Footwear":         "<:Magical_Footwear_rune:1137292589775728670>",
         "Manaflow Band":            "<:Manaflow_Band_rune:1137293010669944852>",
         "Minion Dematerializer":    "<:Minion_Dematerializer_rune:1137292591088545802>",
