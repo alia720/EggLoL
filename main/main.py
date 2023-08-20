@@ -433,8 +433,10 @@ async def help(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral = False)
     #
 
+    
+
     #
-    await interaction.followup.send(interaction.user._client_status)
+    await interaction.followup.send(interaction.guild.get_member(interaction.user.id).mobile_status)
     return
 
 @bot.tree.command(name = "set_profile", description = "For a more tailored experience, set up your LoL profile!")
