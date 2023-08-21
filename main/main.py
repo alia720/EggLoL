@@ -934,7 +934,7 @@ async def profile(interaction: discord.Interaction):
     if discord_profile is None:
 
         # Use the embed_error(msg) function to create your error messages
-        await interaction.followup.send("You don't have a profile. Create one using /set_profile!", ephemeral=True)
+        await interaction.followup.send(embed = embed_error(f"* You don't have a profile. Create one using /set_profile!"))
         return
         
     else:
