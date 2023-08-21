@@ -925,28 +925,66 @@ async def vs(interaction: discord.Interaction, first_champion: str, second_champ
 @bot.tree.command(name = "profile", description = "Retrieve your profile data from our database or search for someone else's!")
 async def profile(interaction: discord.Interaction):
 
-
     await interaction.response.defer(ephemeral=False)
 
     # Retrieve user's profile from the database
     discord_profile = interaction.user.id
+    
 
     if discord_profile is None:
 
-        # Use the embed_error(msg) function to create your error messages
         await interaction.followup.send(embed = embed_error(f"* You don't have a profile. Create one using /set_profile!"))
         return
         
     else:
 
-        # Construct and send the embed with profile information
-        #embed = discord.Embed(title=f"LVL {user_profile['level']} - {interaction.user.display_name}")
-        #embed.set_thumbnail(url=user_profile['lol_profile_picture'])
-        #embed.add_field(name="Rank", value=f"{user_profile['rank_name']} - {user_profile['lp']} LP")
-        #embed.add_field(name="Win/Loss", value=f"{user_profile['win']}W/{user_profile['loss']}L")
+        try:
 
-        #await interaction.followup.send(embed=embed, ephemeral=False)
+            profile_uuid = query_get_data(f"SELECT profile_uuid FROM discord_user WHERE discord_user_id = {discord_profile}")[0]
+            user_profile = query_get_data(f"SELECT region, username, rank FROM lol_profile WHERE profile_uuid = '{profile_uuid}'")
+            
+
+        except:
+
+            await interaction.followup.send(embed = embed_error(f"* Something went wrong while fetching your profile. Try again later."))
+            return
+        
+        with open("main/regions.json") as file:
+
+            regions = json.load(file)
+
+
+        user_url = f"https://u.gg/lol/profile/{regions[user_profile[0]]}/{user_profile[1]}/overview"
+        soup = await aio_get_soup(user_url)
+        user_img = soup.find("div","profile-icon-border").find("img")
+        user_level = soup.find("div","level-header").text
+        user_winrate = soup.find("div", class_="rank-wins").find_all("span")[1].text
+        user_win_loss = soup.find("div", class_="rank-wins").find_all("span")[0].text
+
+        #Will be used to find top 3 champion stats, and 2 if only 2, if only 1 and none if they have not played recently
+        #Check div class of "champion-performance" and "champion-stats" for more
+        #user_champs = soup.find("div","champion-list")
+
+        # Construct and send the embed with profile information
+        embed = discord.Embed(title=f"{user_profile[1]}",color = 0xD9D2E9)
+        embed.set_thumbnail(url= user_img["src"])
+        embed.add_field(name="LVL", value=f"{user_level}")
+        embed.add_field(name="Rank", value=f"{user_profile[2]}")
+        embed.add_field(name="Winrate", value=f"{user_win_loss}\n{user_winrate}",inline=False)
+
+        await interaction.followup.send(embed=embed, ephemeral=False)
 
         return
     
+    
+@bot.tree.command(name = "delete_profile", description = "Delete yours or someone else's saved profile!")
+async def delete_profile(interaction: discord.Interaction):
+    await interaction.response.defer(ephemeral=False)
+
+
+    #await interaction.followup.send(embed=embed, ephemeral=False)
+
+    return
+
+
 bot.run(TOKEN)
