@@ -390,6 +390,7 @@ def get_build_embed(embed, build_data):
         skill_path_grid = ""
 
     return embed
+
 # Asynchronous functions
 
 async def aio_get_soup(url):
@@ -940,6 +941,10 @@ async def profile(interaction: discord.Interaction):
 
         try:
 
+            # You can just do the query:
+            # SELECT region, username, rank FROM discord_user JOIN lol_profile USING (profile_uuid) WHERE discord_user_id = {discord_profile}
+            # I know you got this code from /set_profile but in that scenario I needed profile_uuid for a leter query so I did the
+            # query seperately, but here you don't need profile_uuid again so there is no need to query the database twice
             profile_uuid = query_get_data(f"SELECT profile_uuid FROM discord_user WHERE discord_user_id = {discord_profile}")[0]
             user_profile = query_get_data(f"SELECT region, username, rank FROM lol_profile WHERE profile_uuid = '{profile_uuid}'")
             
@@ -949,6 +954,7 @@ async def profile(interaction: discord.Interaction):
             await interaction.followup.send(embed = embed_error(f"* Something went wrong while fetching your profile. Try again later."))
             return
         
+        # There is a get_region_for_url(region) function that does this job for you so you don't need to repeat this code
         with open("main/regions.json") as file:
 
             regions = json.load(file)
