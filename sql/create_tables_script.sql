@@ -11,6 +11,7 @@ CREATE TABLE lol_profile (
 CREATE TABLE discord_user (
 
     discord_user_id BIGINT NOT NULL PRIMARY KEY,
+    build_format_preference SMALLINT,  
     profile_uuid UUID REFERENCES lol_profile (profile_uuid),
     UNIQUE (profile_uuid)
 

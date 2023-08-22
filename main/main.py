@@ -1059,8 +1059,8 @@ async def profile(interaction: discord.Interaction):
             # SELECT region, username, rank FROM discord_user JOIN lol_profile USING (profile_uuid) WHERE discord_user_id = {discord_profile}
             # I know you got this code from /set_profile but in that scenario I needed profile_uuid for a leter query so I did the
             # query seperately, but here you don't need profile_uuid again so there is no need to query the database twice
-            profile_uuid = query_get_data(f"SELECT profile_uuid FROM discord_user WHERE discord_user_id = {discord_profile}")[0]
-            user_profile = query_get_data(f"SELECT region, username, rank FROM lol_profile WHERE profile_uuid = '{profile_uuid}'")
+            profile_uuid = query_get_data(f"SELECT profile_uuid FROM discord_user WHERE discord_user_id = {discord_profile};")[0]
+            user_profile = query_get_data(f"SELECT region, username, rank FROM lol_profile WHERE profile_uuid = '{profile_uuid}';")
             
 
         except:
@@ -1106,5 +1106,58 @@ async def delete_profile(interaction: discord.Interaction):
 
     return
 
+@bot.tree.command(name = "set_preference", description = "Choose whether or not you would like to see text beside runes and items to better identify them.")
+@app_commands.describe(preference = "Show Text (Set by Default) | Do Not Show Text (For Experienced Players)")
+@app_commands.choices(preference = [
+
+    app_commands.Choice(name = "Show Text", value = 0),
+    app_commands.Choice(name = "Do Not Show Text", value = 1)
+
+])
+async def set_preference(interaction: discord.Integration, preference: app_commands.Choice[int]):
+
+    await interaction.response.defer(ephemeral=False)
+
+    user_choice = preference.value
+
+    user_id = interaction.user.id
+
+    current_preference_resp = query_get_data(f"SELECT build_format_preference FROM discord_user WHERE discord_user_id = 404;")
+
+    if current_preference_resp == 400:
+
+        await interaction.followup.send(embed = embed_error("* Something went wrong when trying to update your preference. Please try again later."))
+        return
+    
+    elif current_preference_resp == None:
+    
+        await interaction.followup.send(embed = embed_error("* It looks like you currently do not have a profile. Use `/set_profile` to do so."))
+        return
+    
+    else:
+
+        current_preference = current_preference_resp[0]
+
+    if current_preference == None and user_choice == 0:
+
+        await interaction.followup.send(embed = embed_error("* The default preference is set to 'Show Text'."))
+        return
+
+    if current_preference == user_choice:
+
+        await interaction.followup.send(embed = embed_error(f"* Your current preference is already set to '{preference.name}'."))
+        return
+    
+    if query_mainpulate_data(f"UPDATE discord_user SET build_format_preference = {user_choice} WHERE discord_user_id = {user_id};") == 400:
+
+        await interaction.followup.send(embed = embed_error(f"* Something went wrong when trying to update your preference. Please try again later."))
+        return
+    
+    else: 
+
+        embed = discord.Embed(title = "Success", description = f"Your preference has succesfully been updated to '{preference.name}'.", color = 0x00AA00)
+
+        await interaction.followup.send(embed = embed, ephemeral = False)
+        return
 
 bot.run(TOKEN)
