@@ -5,6 +5,7 @@ import aiohttp
 import configparser
 import psycopg2
 import lxml
+import time
 import simplejson as json
 import numpy as np
 from uuid_extensions import uuid7
@@ -151,7 +152,13 @@ def get_emote(emote_for, key):
 
         mappings = json.load(file)
 
-    return mappings[emote_for][key]
+    try:
+
+        return mappings[emote_for][key]
+    
+    except:
+
+        return ":x:"
 
 def create_url(interaction, champion_name, role, rank, queue_type, region):
 
@@ -305,6 +312,16 @@ def get_build_data(soup, champion_name_for_ui):
     skill_path = soup.find("div", "skill-path-container")
     skill_path_rows = skill_path.find_all("div", "skill-order")[:4]
 
+    recommended_build_items_div = soup.find("div", "recommended-build_items")
+
+    starting_items = recommended_build_items_div.find("div", "starting-items").find_all("div", "item-img")
+    starting_items_stats = recommended_build_items_div.find("div", "starting-items").find("div", "item-stats").div.text + f"({recommended_build_items_div.find('div', 'starting-items').find('div', 'item-stats').find('div', 'matches').text})"
+    core_items = recommended_build_items_div.find("div", "core-items").find_all("div", "item-img")
+    core_items_stats = recommended_build_items_div.find("div", "core-items").find("div", "item-stats").div.text + f"({recommended_build_items_div.find('div', 'core-items').find('div', 'item-stats').find('div', 'matches').text})"
+    fourth_item_options = recommended_build_items_div.find("div", "item-options-1").find_all("div", "item-img")
+    fifth_item_options = recommended_build_items_div.find("div", "item-options-2").find_all("div", "item-img")
+    sixth_item_options = recommended_build_items_div.find("div", "item-options-3").find_all("div", "item-img")
+
     return {
 
         "primary_tree": primary_tree,
@@ -319,11 +336,44 @@ def get_build_data(soup, champion_name_for_ui):
         "skill_priority": skill_priority,
         "skill_priority_wr": skill_priority_wr,
         "skill_priority_matches": skill_priority_matches,
-        "skill_path_rows": skill_path_rows
+        "skill_path_rows": skill_path_rows,
+        "starting_items": starting_items,
+        "starting_items_stats": starting_items_stats,
+        "core_items": core_items,
+        "core_items_stats": core_items_stats,
+        "fourth_item_options": fourth_item_options,
+        "fifth_item_options": fifth_item_options,
+        "sixth_item_options": sixth_item_options
 
     }
 
-def get_build_embed(embed, build_data):
+def get_item_text(data, view_type):
+
+    text = ""
+
+    if view_type == "detailed":
+
+        for item in data:
+
+            item_identifier = f"{item.div.div['style'].split(';')[2].split('/')[-1][:-1]} {item.div.div['style'].split(';')[-4].split(':')[1]}"
+
+            item_data = get_emote("Item", item_identifier)
+
+            text += f"{item_data.split('=')[1]}  {item_data.split('=')[0]}\n"
+
+    else:
+
+        for item in data:
+
+            item_identifier = f"{item.div.div['style'].split(';')[2].split('/')[-1][:-1]} {item.div.div['style'].split(';')[-4].split(':')[1]}"
+
+            item_data = get_emote("Item", item_identifier)
+
+            text += f"{item_data.split('=')[1]}\n"
+
+    return text
+
+def get_detailed_text(build_data):
 
     main_runes_text = ""
     secondary_runes_text = ""
@@ -353,7 +403,52 @@ def get_build_embed(embed, build_data):
     for shard in build_data["shards"]:
 
         shards_text += f"{get_emote('Shard', shard.img['alt'][4:][:-6])}  {shard.img['alt'][4:][:-6]}\n"
+
+    return main_runes_text, secondary_runes_text, shards_text
+
+def get_simple_text(build_data):
+
+    main_runes_text = ""
+    secondary_runes_text = ""
+
+    for rune_index, rune in enumerate(build_data["runes"]):
+
+        if rune_index == 0:
+
+            main_runes_text += f"{get_emote('Tree', build_data['primary_tree'])}\n"
+
+            main_runes_text += f"{get_emote('Keystone', rune.img['alt'][13:])}\n"
+
+        elif rune_index in range(1, 4):
+
+            main_runes_text += f"{get_emote('Rune', rune.img['alt'][9:])}\n"
+
+        if rune_index == 4:
+
+            secondary_runes_text += f"{get_emote('Tree', build_data['secondary_tree'])}\n"
+
+        if rune_index in range(4, 6):
+
+            secondary_runes_text += f"{get_emote('Rune', rune.img['alt'][9:])}\n"
+
+    shards_text = ""
+
+    for shard in build_data["shards"]:
+
+        shards_text += f"{get_emote('Shard', shard.img['alt'][4:][:-6])}\n"
+
+    return main_runes_text, secondary_runes_text, shards_text
+
+def get_build_embed(embed, build_data, view_type):
     
+    if view_type == "detailed":
+
+        main_runes_text, secondary_runes_text, shards_text = get_detailed_text(build_data)
+
+    else:
+
+        main_runes_text, secondary_runes_text, shards_text = get_simple_text(build_data)
+
     summoner_spell_text = ""
 
     for summoner_spell in build_data["summoner_spells"]:
@@ -367,6 +462,12 @@ def get_build_embed(embed, build_data):
         "E": "<:e_:1142021173253779526>"
 
     }
+
+    starting_items_text = get_item_text(build_data["starting_items"], view_type)
+    core_items_text = get_item_text(build_data["core_items"], view_type)
+    fourth_item_options_text = get_item_text(build_data["fourth_item_options"], view_type)
+    fifth_item_options_text = get_item_text(build_data["fifth_item_options"], view_type)
+    sixth_item_options_text = get_item_text(build_data["sixth_item_options"], view_type)
 
     embed.add_field(name = f"Runes | {build_data['runes_wr']}{build_data['runes_matches']}", value = "", inline = False)
     embed.add_field(name = "", value = f"{main_runes_text}")
@@ -388,6 +489,12 @@ def get_build_embed(embed, build_data):
         skill_path_grid += "\n"
         embed.add_field(name = "", value = f"{skill_path_grid}", inline = False)
         skill_path_grid = ""
+
+    embed.add_field(name = f"Starting Items | {build_data['starting_items_stats']}", value = f"{starting_items_text}", inline = False)
+    embed.add_field(name = f"Core Items | {build_data['core_items_stats']}", value = f"{core_items_text}", inline = False)
+    embed.add_field(name = f"Fourth Item Options", value = f"{fourth_item_options_text}")
+    embed.add_field(name = f"Fifth Item Options", value = f"{fifth_item_options_text}")
+    embed.add_field(name = f"Sixth Item Options", value = f"{sixth_item_options_text}")
 
     return embed
 
@@ -675,9 +782,16 @@ async def overview(interaction: discord.Interaction, champion_name: str, role: O
     return
 
 @bot.tree.command(name = "build", description = "Get the complete build for the champion including the runes, summoner spells, items and more.")
-@app_commands.describe(champion_name = "Champion to get build for")
+@app_commands.describe(champion_name = "Champion to get build for", include_names = "Would you like to have the names of the runes and items displayed? (Choose 'Yes' if you don't know all runes and items by image)")
 @app_commands.choices(
     
+    include_names = [
+
+        app_commands.Choice(name = "Yes", value = "detailed"),
+        app_commands.Choice(name = "No", value = "simple")
+
+    ],
+
     role = [
     
         app_commands.Choice(name = "Top", value = "top"),
@@ -739,7 +853,7 @@ async def overview(interaction: discord.Interaction, champion_name: str, role: O
     ]
 )
 
-async def build(interaction: discord.Interaction, champion_name: str, role: Optional[app_commands.Choice[str]] = None, rank: Optional[app_commands.Choice[str]] = '{"name": "Emerald +"}',  queue_type: Optional[app_commands.Choice[str]] = '{"name": "Ranked Solo/Duo"}', region: Optional[app_commands.Choice[str]] = '{"name": "World", "value": "World"}'):
+async def build(interaction: discord.Interaction, champion_name: str, include_names: app_commands.Choice[str], role: Optional[app_commands.Choice[str]] = None, rank: Optional[app_commands.Choice[str]] = '{"name": "Emerald +"}',  queue_type: Optional[app_commands.Choice[str]] = '{"name": "Ranked Solo/Duo"}', region: Optional[app_commands.Choice[str]] = '{"name": "World", "value": "World"}'):
 
     await interaction.response.defer(ephemeral = False)
 
@@ -781,7 +895,7 @@ async def build(interaction: discord.Interaction, champion_name: str, role: Opti
     champion_icon = discord.File(champion_icon_dir, filename = f"{champion_icon_dir.split('/')[-1]}")
     embed.set_thumbnail(url = f"attachment://{champion_icon_dir.split('/')[-1]}")
 
-    build_embed = get_build_embed(embed, build_data)
+    build_embed = get_build_embed(embed, build_data, include_names.value)
 
     embed.set_footer(text = f"Powered by U.GG", icon_url = "https://pbs.twimg.com/profile_images/1146442344662798336/X1Daf_aS_400x400.png")
 
@@ -916,7 +1030,7 @@ async def vs(interaction: discord.Interaction, first_champion: str, second_champ
     embed.add_field(name = "Matches", value = f"{soup.find('div', 'champion-ranking-stats-normal').find('div', 'matches-oppid').div.text}")
     embed.add_field(name = "", value = "", inline = False)
 
-    build_embed = get_build_embed(embed, build_data)
+    build_embed = get_build_embed(embed, build_data, "detailed")
 
     embed.set_footer(text = f"Powered by U.GG", icon_url = "https://pbs.twimg.com/profile_images/1146442344662798336/X1Daf_aS_400x400.png")
 
