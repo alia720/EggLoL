@@ -1101,11 +1101,11 @@ async def profile(interaction: discord.Interaction):
         try:
             user_img = soup.find("div","profile-icon-border").find("img")
             user_level = soup.find("div","level-header").text
-            user_winrate = soup.find("div", class_="rank-wins").find_all("span")[1].text
-            user_win_loss = soup.find("div", class_="rank-wins").find_all("span")[0].text
-            champions_name = soup.find_all("div",class_="champion-name")
-            champions_kda = soup.find_all("div",class_="kda-ratio gray-okay-tier")
-            champions_wr = soup.find_all("div", class_="win-rate")
+            user_winrate = soup.find("div", class_ = "rank-wins").find_all("span")[1].text
+            user_win_loss = soup.find("div", class_ = "rank-wins").find_all("span")[0].text
+            champions_name = soup.find_all("div",class_ = "champion-name")
+            champions_kda = soup.find_all("div",class_ = "kda-ratio gray-okay-tier")
+            champions_wr = soup.find_all("div", class_ = "win-rate")
 
         except AttributeError:
 
@@ -1113,17 +1113,17 @@ async def profile(interaction: discord.Interaction):
             await interaction.followup.send(embed = embed_error(f"* There was an error gathering your info, please try again later"))
         
         #Reminder - error checking if ranked-wr is None or champions_name,kda,wr is None then we dont pull
-        embed = discord.Embed(title=f"{user_profile[1]}",color = 0xD9D2E9)
-        embed.set_thumbnail(url= user_img["src"])
-        embed.add_field(name="LVL", value=f"{user_level}")
-        embed.add_field(name="Rank", value=f"{user_profile[2]}")
-        embed.add_field(name="Ranked Winrate", value=f"{user_win_loss}\n{user_winrate}",inline=False)
+        embed = discord.Embed(title = f"{user_profile[1]}", color = 0xD9D2E9)
+        embed.set_thumbnail(url = user_img["src"])
+        embed.add_field(name = "LVL", value = f"{user_level}")
+        embed.add_field(name = "Rank", value = f"{user_profile[2]}")
+        embed.add_field(name = "Ranked Winrate", value=f"{user_win_loss}\n{user_winrate}", inline = False)
         champions_data = zip(champions_name, champions_kda, champions_wr)
         champions_info = "\n".join(f"{name.text} | {kda.text} | {wr.text}" for name, kda, wr in champions_data)
-        embed.add_field(name="Top 3 Champs", value=champions_info)
+        embed.add_field(name = "Top 3 Champs", value = champions_info)
 
 
-        await interaction.followup.send(embed=embed, ephemeral=False)
+        await interaction.followup.send(embed = embed, ephemeral = False)
 
         return
     
