@@ -767,7 +767,7 @@ async def overview(interaction: discord.Interaction, champion_name: str, role: O
 
     if queue_type.name != "ARAM":
 
-        embed = discord.Embed(title = f"{champion_name_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**\n{rank.name}", url = url,  color = 0x222247)
+        embed = discord.Embed(title = f"{champion_name_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**\n{get_emote('Rank', rank.name.split()[0])} {rank.name}", url = url,  color = 0x222247)
 
     else:
         
@@ -882,7 +882,7 @@ async def build(interaction: discord.Interaction, champion_name: str, role: Opti
 
         if queue_type.name == "Ranked Solo/Duo" or queue_type.name == "Ranked Flex":
 
-            embed = discord.Embed(title = f"{champion_name_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**\n{rank.name}", url = url,  color = 0x222247)
+            embed = discord.Embed(title = f"{champion_name_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**\n{get_emote('Rank', rank.name.split()[0])} {rank.name}", url = url,  color = 0x222247)
 
         else:
 
@@ -1037,7 +1037,7 @@ async def vs(interaction: discord.Interaction, first_champion: str, second_champ
         await interaction.followup.send(embed = embed_error(f"{build_data['Error'][:-1]} vs. {get_champion_for_ui(opp)} in the following criteria:\n * {region.name}\n * {queue_type.name}\n * {rank.name}\n * {role}"))
         return
 
-    embed = discord.Embed(title = f"{my_champion_for_ui} vs. {get_champion_for_ui(opp)} | {role}", description = f"**{queue_type.name}** in **{region.name}**\n{rank.name}", url = url, color = 0xD13441)
+    embed = discord.Embed(title = f"{my_champion_for_ui} vs. {get_champion_for_ui(opp)} | {role}", description = f"**{queue_type.name}** in **{region.name}**\n{get_emote('Rank', rank.name.split()[0])} {rank.name}", url = url, color = 0xD13441)
 
     champion_icon_dir = get_emote("Champion", my_champion_for_ui)
     champion_icon = discord.File(champion_icon_dir, filename = f"{champion_icon_dir.split('/')[-1]}")
