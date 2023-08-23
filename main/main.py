@@ -1088,42 +1088,40 @@ async def profile(interaction: discord.Interaction):
 
         try:
 
-            # You can just do the query:
-            # SELECT region, username, rank FROM discord_user JOIN lol_profile USING (profile_uuid) WHERE discord_user_id = {discord_profile}
-            # I know you got this code from /set_profile but in that scenario I needed profile_uuid for a leter query so I did the
-            # query seperately, but here you don't need profile_uuid again so there is no need to query the database twice
-            profile_uuid = query_get_data(f"SELECT profile_uuid FROM discord_user WHERE discord_user_id = {discord_profile};")[0]
-            user_profile = query_get_data(f"SELECT region, username, rank FROM lol_profile WHERE profile_uuid = '{profile_uuid}';")
+            user_profile = query_get_data(f"SELECT region, username, rank FROM discord_user JOIN lol_profile USING (profile_uuid) WHERE discord_user_id = {discord_profile}")
             
-
         except:
 
             await interaction.followup.send(embed = embed_error(f"* Something went wrong while fetching your profile. Try again later."))
             return
         
-        # There is a get_region_for_url(region) function that does this job for you so you don't need to repeat this code
-        with open("main/regions.json") as file:
-
-            regions = json.load(file)
-
-
-        user_url = f"https://u.gg/lol/profile/{regions[user_profile[0]]}/{user_profile[1]}/overview"
+        user_url = f"https://u.gg/lol/profile/{get_region_for_url(user_profile[0])}/{user_profile[1]}/overview"
         soup = await aio_get_soup(user_url)
-        user_img = soup.find("div","profile-icon-border").find("img")
-        user_level = soup.find("div","level-header").text
-        user_winrate = soup.find("div", class_="rank-wins").find_all("span")[1].text
-        user_win_loss = soup.find("div", class_="rank-wins").find_all("span")[0].text
 
-        #Will be used to find top 3 champion stats, and 2 if only 2, if only 1 and none if they have not played recently
-        #Check div class of "champion-performance" and "champion-stats" for more
-        #user_champs = soup.find("div","champion-list")
+        try:
+            user_img = soup.find("div","profile-icon-border").find("img")
+            user_level = soup.find("div","level-header").text
+            user_winrate = soup.find("div", class_="rank-wins").find_all("span")[1].text
+            user_win_loss = soup.find("div", class_="rank-wins").find_all("span")[0].text
+            champions_name = soup.find_all("div",class_="champion-name")
+            champions_kda = soup.find_all("div",class_="kda-ratio gray-okay-tier")
+            champions_wr = soup.find_all("div", class_="win-rate")
 
-        # Construct and send the embed with profile information
+        except AttributeError:
+
+            #not sure how to write if an error came up so i just stole urs
+            await interaction.followup.send(embed = embed_error(f"* There was an error gathering your info, please try again later"))
+        
+        #Reminder - error checking if ranked-wr is None or champions_name,kda,wr is None then we dont pull
         embed = discord.Embed(title=f"{user_profile[1]}",color = 0xD9D2E9)
         embed.set_thumbnail(url= user_img["src"])
         embed.add_field(name="LVL", value=f"{user_level}")
         embed.add_field(name="Rank", value=f"{user_profile[2]}")
-        embed.add_field(name="Winrate", value=f"{user_win_loss}\n{user_winrate}",inline=False)
+        embed.add_field(name="Ranked Winrate", value=f"{user_win_loss}\n{user_winrate}",inline=False)
+        champions_data = zip(champions_name, champions_kda, champions_wr)
+        champions_info = "\n".join(f"{name.text} | {kda.text} | {wr.text}" for name, kda, wr in champions_data)
+        embed.add_field(name="Top 3 Champs", value=champions_info)
+
 
         await interaction.followup.send(embed=embed, ephemeral=False)
 
@@ -1134,6 +1132,9 @@ async def profile(interaction: discord.Interaction):
 async def delete_profile(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=False)
 
+    discord_profile = interaction.user.id
+
+    
 
     #await interaction.followup.send(embed=embed, ephemeral=False)
 
