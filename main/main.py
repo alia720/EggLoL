@@ -317,7 +317,15 @@ def get_build_data(soup, champion_name_for_ui):
     starting_items = recommended_build_items_div.find("div", "starting-items").find_all("div", "item-img")
     starting_items_stats = recommended_build_items_div.find("div", "starting-items").find("div", "item-stats").div.text + f"({recommended_build_items_div.find('div', 'starting-items').find('div', 'item-stats').find('div', 'matches').text})"
     core_items = recommended_build_items_div.find("div", "core-items").find_all("div", "item-img")
-    core_items_stats = recommended_build_items_div.find("div", "core-items").find("div", "item-stats").div.text + f"({recommended_build_items_div.find('div', 'core-items').find('div', 'item-stats').find('div', 'matches').text})"
+
+    try: 
+        
+        core_items_stats = recommended_build_items_div.find("div", "core-items").find("div", "item-stats").div.text + f"({recommended_build_items_div.find('div', 'core-items').find('div', 'item-stats').find('div', 'matches').text})"
+    
+    except:
+
+        core_items_stats = ":x: Error Retrieving Core Items"
+
     fourth_item_options = recommended_build_items_div.find("div", "item-options-1").find_all("div", "item-img")
     fifth_item_options = recommended_build_items_div.find("div", "item-options-2").find_all("div", "item-img")
     sixth_item_options = recommended_build_items_div.find("div", "item-options-3").find_all("div", "item-img")
@@ -351,7 +359,7 @@ def get_item_text(data, view_type):
 
     text = ""
 
-    if view_type == "detailed":
+    if view_type == 0:
 
         for item in data:
 
@@ -441,7 +449,7 @@ def get_simple_text(build_data):
 
 def get_build_embed(embed, build_data, view_type):
     
-    if view_type == "detailed":
+    if view_type == 0:
 
         main_runes_text, secondary_runes_text, shards_text = get_detailed_text(build_data)
 
@@ -782,15 +790,8 @@ async def overview(interaction: discord.Interaction, champion_name: str, role: O
     return
 
 @bot.tree.command(name = "build", description = "Get the complete build for the champion including the runes, summoner spells, items and more.")
-@app_commands.describe(champion_name = "Champion to get build for", include_names = "Would you like to have the names of the runes and items displayed? (Choose 'Yes' if you don't know all runes and items by image)")
+@app_commands.describe(champion_name = "Champion to get build for")
 @app_commands.choices(
-    
-    include_names = [
-
-        app_commands.Choice(name = "Yes", value = "detailed"),
-        app_commands.Choice(name = "No", value = "simple")
-
-    ],
 
     role = [
     
@@ -853,7 +854,7 @@ async def overview(interaction: discord.Interaction, champion_name: str, role: O
     ]
 )
 
-async def build(interaction: discord.Interaction, champion_name: str, include_names: app_commands.Choice[str], role: Optional[app_commands.Choice[str]] = None, rank: Optional[app_commands.Choice[str]] = '{"name": "Emerald +"}',  queue_type: Optional[app_commands.Choice[str]] = '{"name": "Ranked Solo/Duo"}', region: Optional[app_commands.Choice[str]] = '{"name": "World", "value": "World"}'):
+async def build(interaction: discord.Interaction, champion_name: str, role: Optional[app_commands.Choice[str]] = None, rank: Optional[app_commands.Choice[str]] = '{"name": "Emerald +"}',  queue_type: Optional[app_commands.Choice[str]] = '{"name": "Ranked Solo/Duo"}', region: Optional[app_commands.Choice[str]] = '{"name": "World", "value": "World"}'):
 
     await interaction.response.defer(ephemeral = False)
 
@@ -895,7 +896,23 @@ async def build(interaction: discord.Interaction, champion_name: str, include_na
     champion_icon = discord.File(champion_icon_dir, filename = f"{champion_icon_dir.split('/')[-1]}")
     embed.set_thumbnail(url = f"attachment://{champion_icon_dir.split('/')[-1]}")
 
-    build_embed = get_build_embed(embed, build_data, include_names.value)
+    current_preference_resp = query_get_data(f"SELECT build_format_preference FROM discord_user WHERE discord_user_id = {interaction.user.id};")
+
+    if current_preference_resp == 400 or current_preference_resp == None:
+
+        # Sets to default preference if error or they don't have a profile
+        current_preference = 0
+
+    else:
+
+        current_preference = current_preference_resp[0]
+
+        # Sets to default preference if profile exists but they have not set preference
+        if current_preference == None:
+
+            current_preference = 0
+
+    build_embed = get_build_embed(embed, build_data, current_preference)
 
     embed.set_footer(text = f"Powered by U.GG", icon_url = "https://pbs.twimg.com/profile_images/1146442344662798336/X1Daf_aS_400x400.png")
 
@@ -1030,7 +1047,23 @@ async def vs(interaction: discord.Interaction, first_champion: str, second_champ
     embed.add_field(name = "Matches", value = f"{soup.find('div', 'champion-ranking-stats-normal').find('div', 'matches-oppid').div.text}")
     embed.add_field(name = "", value = "", inline = False)
 
-    build_embed = get_build_embed(embed, build_data, "detailed")
+    current_preference_resp = query_get_data(f"SELECT build_format_preference FROM discord_user WHERE discord_user_id = {interaction.user.id};")
+
+    if current_preference_resp == 400 or current_preference_resp == None:
+
+        # Sets to default preference if error or they don't have a profile
+        current_preference = 0
+
+    else:
+
+        current_preference = current_preference_resp[0]
+
+        # Sets to default preference if profile exists but they have not set preference
+        if current_preference == None:
+
+            current_preference = 0
+
+    build_embed = get_build_embed(embed, build_data, current_preference)
 
     embed.set_footer(text = f"Powered by U.GG", icon_url = "https://pbs.twimg.com/profile_images/1146442344662798336/X1Daf_aS_400x400.png")
 
@@ -1122,7 +1155,7 @@ async def set_preference(interaction: discord.Integration, preference: app_comma
 
     user_id = interaction.user.id
 
-    current_preference_resp = query_get_data(f"SELECT build_format_preference FROM discord_user WHERE discord_user_id = 404;")
+    current_preference_resp = query_get_data(f"SELECT build_format_preference FROM discord_user WHERE discord_user_id = {user_id};")
 
     if current_preference_resp == 400:
 
