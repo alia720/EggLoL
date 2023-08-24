@@ -1111,6 +1111,7 @@ async def profile(interaction: discord.Interaction):
 
             #not sure how to write if an error came up so i just stole urs
             await interaction.followup.send(embed = embed_error(f"* There was an error gathering your info, please try again later"))
+            return
         
         #Reminder - error checking if ranked-wr is None or champions_name,kda,wr is None then we dont pull
         embed = discord.Embed(title = f"{user_profile[1]}", color = 0xD9D2E9)
