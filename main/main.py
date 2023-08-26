@@ -309,13 +309,19 @@ def get_build_data(soup, champion_name_for_ui):
         skill_priority_wr = "~%"
         skill_priority_matches = "~ Matches"
 
-    skill_path = soup.find("div", "skill-path-container")
-    skill_path_rows = skill_path.find_all("div", "skill-order")[:4]
+    try:
+
+        skill_path = soup.find("div", "skill-path-container")
+        skill_path_rows = skill_path.find_all("div", "skill-order")[:4]
+
+    except: 
+
+        skill_path_rows = []
 
     recommended_build_items_div = soup.find("div", "recommended-build_items")
 
     starting_items = recommended_build_items_div.find("div", "starting-items").find_all("div", "item-img")
-    starting_items_stats = recommended_build_items_div.find("div", "starting-items").find("div", "item-stats").div.text + f"({recommended_build_items_div.find('div', 'starting-items').find('div', 'item-stats').find('div', 'matches').text})"
+    starting_items_stats = recommended_build_items_div.find("div", "starting-items").find("div", "item-stats").div.text + " " + f"({recommended_build_items_div.find('div', 'starting-items').find('div', 'item-stats').find('div', 'matches').text})"
     core_items = recommended_build_items_div.find("div", "core-items").find_all("div", "item-img")
 
     try: 
@@ -482,9 +488,24 @@ def get_build_embed(embed, build_data, view_type):
     embed.add_field(name = "", value = f"{secondary_runes_text}")
     embed.add_field(name = "", value = f"{shards_text}")
     embed.add_field(name = f"Summoner Spells | {build_data['summoner_spells_wr']}{build_data['summoner_spells_matches']}", value = f"{summoner_spell_text}")
-    embed.add_field(name = f"Skill Priority | {build_data['skill_priority_wr']} WR ({build_data['skill_priority_matches']})", value = f"{skill_priority_mapping[build_data['skill_priority'][0].text]} > {skill_priority_mapping[build_data['skill_priority'][1].text]} > {skill_priority_mapping[build_data['skill_priority'][2].text]}", inline = False)
+    
+    if build_data['skill_priority'] == []:
+
+        embed.add_field(name = f"Skill Priority | {build_data['skill_priority_wr']} WR ({build_data['skill_priority_matches']})", value = f":x: No 'Skill Priority' data was not found.", inline = False)
+
+    else:
+    
+        embed.add_field(name = f"Skill Priority | {build_data['skill_priority_wr']} WR ({build_data['skill_priority_matches']})", value = f"{skill_priority_mapping[build_data['skill_priority'][0].text]} > {skill_priority_mapping[build_data['skill_priority'][1].text]} > {skill_priority_mapping[build_data['skill_priority'][2].text]}", inline = False)
+    
     embed.add_field(name = "Skill Path", value = "", inline = False)
-    embed.add_field(name = "", value = "<:1_:1142013758198251528><:2_:1142014838734856276><:3_:1142014837010993172><:4_:1142014822335139893><:5_:1142014801162281001><:6_:1142014789279809559><:7_:1142014755389845575><:8_:1142014739065618462><:9_:1142015195632386109><:10:1142015179765321781><:11:1142015164749729823><:12:1142015156587614259><:13:1142015154989580311><:14:1142015150661062698><:15:1142015148056387634><:16:1142015131912503358><:17:1142015121154121779><:18:1142015119560282192>", inline = False)
+
+    if build_data["skill_path_rows"] == []:
+
+        embed.add_field(name = f"", value = f":x: No 'Skill Path data was found.", inline = False)
+
+    else:
+
+        embed.add_field(name = "", value = "<:1_:1142013758198251528><:2_:1142014838734856276><:3_:1142014837010993172><:4_:1142014822335139893><:5_:1142014801162281001><:6_:1142014789279809559><:7_:1142014755389845575><:8_:1142014739065618462><:9_:1142015195632386109><:10:1142015179765321781><:11:1142015164749729823><:12:1142015156587614259><:13:1142015154989580311><:14:1142015150661062698><:15:1142015148056387634><:16:1142015131912503358><:17:1142015121154121779><:18:1142015119560282192>", inline = False)
 
     skill_path_grid = ""
 
