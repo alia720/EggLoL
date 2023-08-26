@@ -506,6 +506,47 @@ def get_build_embed(embed, build_data, view_type):
 
     return embed
 
+def get_profile_embed(url, soup):
+
+    try:
+        summoner_name = soup.find("div","summoner-name").span.text
+    except:
+        return embed_error("Summoner name was not found")
+
+    user_img = soup.find("div","profile-icon-border").find("img")
+    user_level = soup.find("div","level-header").text
+
+    rank = soup.find("span", "unranked").text
+    lp = ""
+
+    if rank  == "":
+
+        rank = soup.find("div", "rank-text").span.text
+        lp = soup.find("div", "rank-text").find_all("span")[1].text
+
+    user_winrate = soup.find("div", class_="rank-wins").find_all("span")[1].text if soup.find("div", class_="rank-wins") else "* Ranked winrate could not be found"
+    user_win_loss = soup.find("div", class_="rank-wins").find_all("span")[0].text if soup.find("div", class_="rank-wins") else "* Win/Loss information could not be found"
+    champions_name = [champion.text for champion in soup.find_all("div", class_="champion-name")] if soup.find_all("div", class_="champion-name") else "No recent available champion information found"
+    champions_kda = [kda.text for kda in soup.find_all("div", class_="kda-ratio")] if soup.find_all("div", class_="kda-ratio") else ""
+    champions_wr = [wr.text for wr in soup.find_all("div", class_="win-rate")] if soup.find_all("div", class_="win-rate") else ""
+
+    #Reminder - error checking if ranked-wr is None or champions_name,kda,wr is None then we dont pull
+    embed = discord.Embed(title=f"{summoner_name}",color = 0x000000)
+    embed.set_thumbnail(url= user_img["src"])
+    embed.add_field(name="LVL", value=f"{user_level}")
+    embed.add_field(name="Rank", value=f"{rank} {lp}")
+    embed.add_field(name="Ranked Winrate", value=f"{user_win_loss}\n{user_winrate}",inline=False)
+    champions_data = zip(champions_name, champions_kda, champions_wr)
+
+    if champions_kda == "" and champions_wr == "":
+        champions_info = champions_name
+        embed.add_field(name="Top Played Champions", value=champions_info)
+    else:
+        champions_info = "\n".join(f"{name} | {kda} | {wr}" for name, kda, wr in champions_data)
+        embed.add_field(name="Top Played Champions", value=champions_info)
+
+    return embed
+
 # Asynchronous functions
 
 async def aio_get_soup(url):
@@ -1080,33 +1121,50 @@ async def vs(interaction: discord.Interaction, first_champion: str, second_champ
     return
 
 @bot.tree.command(name = "profile", description = "Retrieve your profile data from our database or search for someone else's!")
-async def profile(interaction: discord.Interaction):
+@app_commands.choices(region = [
+    app_commands.Choice(name = "NA", value = "na1"),
+    app_commands.Choice(name = "EUW", value = "euw1"),
+    app_commands.Choice(name = "KR", value = "kr"),
+    app_commands.Choice(name = "BR", value = "br1"),
+    app_commands.Choice(name = "EUN", value = "eun1"),
+    app_commands.Choice(name = "JP", value = "jp1"),
+    app_commands.Choice(name = "LAN", value = "la1"),
+    app_commands.Choice(name = "LAS", value = "la2"),
+    app_commands.Choice(name = "OCE", value = "oc1"),
+    app_commands.Choice(name = "RU", value = "ru"),
+    app_commands.Choice(name = "TR", value = "tr1"),
+    app_commands.Choice(name = "PH", value = "ph1"),
+    app_commands.Choice(name = "SG", value = "sg2"),
+    app_commands.Choice(name = "TH", value = "th2"),
+    app_commands.Choice(name = "TW", value = "tw2"),
+    app_commands.Choice(name = "VN", value = "vn2")
+    ])
+async def profile(interaction: discord.Interaction, username: Optional[str] = None, region: Optional[app_commands.Choice[str]] = None):
 
     await interaction.response.defer(ephemeral=False)
 
     # Retrieve user's profile from the database
     discord_profile = interaction.user.id
     
+    if username == None and region == None:
 
-    if discord_profile is None:
-
-        await interaction.followup.send(embed = embed_error(f"* You don't have a profile. Create one using /set_profile!"))
-        return
-        
-    else:
-
-        try:
-
-            user_profile = query_get_data(f"SELECT region, username, rank FROM discord_user JOIN lol_profile USING (profile_uuid) WHERE discord_user_id = {discord_profile}")
+        user_profile = query_get_data(f"SELECT region, username, rank FROM discord_user JOIN lol_profile USING (profile_uuid) WHERE discord_user_id = {discord_profile}")
             
-        except:
+        if user_profile == 400:
 
             await interaction.followup.send(embed = embed_error(f"* Something went wrong while fetching your profile. Try again later."))
             return
         
+        if user_profile == None:
+            
+            await interaction.followup.send(embed = embed_error(f"* You do not have a profile set. Use /setprofile to create one!"))
+            return
+
+        
         user_url = f"https://u.gg/lol/profile/{get_region_for_url(user_profile[0])}/{user_profile[1]}/overview"
         soup = await aio_get_soup(user_url)
 
+<<<<<<< Updated upstream
         try:
             user_img = soup.find("div","profile-icon-border").find("img")
             user_level = soup.find("div","level-header").text
@@ -1131,22 +1189,63 @@ async def profile(interaction: discord.Interaction):
         champions_data = zip(champions_name, champions_kda, champions_wr)
         champions_info = "\n".join(f"{name.text} | {kda.text} | {wr.text}" for name, kda, wr in champions_data)
         embed.add_field(name = "Top 3 Champs", value = champions_info)
+=======
+        embed = get_profile_embed(user_url, soup)
+        
+        await interaction.followup.send(embed=embed, ephemeral=False)
+>>>>>>> Stashed changes
 
+        return
+    
+    elif username == None and region != None:
+
+        embed = embed_error("You did not specify a Summoner name")
 
         await interaction.followup.send(embed = embed, ephemeral = False)
 
         return
     
+    elif username != None and region == None:
+
+        embed = embed_error("You did not specify a Region")
+
+        await interaction.followup.send(embed=embed, ephemeral=False)
+
+        return
+
+    else:
+
+        user_url = f"https://u.gg/lol/profile/{region.value}/{username}/overview"
+        soup = await aio_get_soup(user_url)
+
+        embed = get_profile_embed(user_url,soup)
+        
+        await interaction.followup.send(embed=embed, ephemeral=False)
+
+        return
+
+
     
-@bot.tree.command(name = "delete_profile", description = "Delete yours or someone else's saved profile!")
+    
+@bot.tree.command(name = "delete_profile", description = "Delete your profile.")
 async def delete_profile(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=False)
 
     discord_profile = interaction.user.id
 
-    
+    discord_user = query_get_data(f"SELECT discord_user_id FROM discord_user WHERE discord_user_id = {discord_profile}")
 
-    #await interaction.followup.send(embed=embed, ephemeral=False)
+    if discord_user:
+        status_code = query_mainpulate_data(f"DELETE FROM discord_user WHERE discord_user_id = {discord_profile};")
+        
+        if status_code == 200:
+            embed = discord.Embed(description="Profile deleted successfully.", color=discord.Color.green())
+        else:
+            embed = discord.Embed(description="Failed to delete profile.", color=discord.Color.red())
+    else:
+        embed = discord.Embed(description="Profile not found.", color=discord.Color.orange())
+
+    await interaction.followup.send(embed=embed, ephemeral=False)
 
     return
 
