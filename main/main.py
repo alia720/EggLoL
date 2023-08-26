@@ -1164,7 +1164,7 @@ async def profile(interaction: discord.Interaction, username: Optional[str] = No
         user_url = f"https://u.gg/lol/profile/{get_region_for_url(user_profile[0])}/{user_profile[1]}/overview"
         soup = await aio_get_soup(user_url)
 
-        embed = get_profile_embed(user_url, soup)
+        embed = get_profile_embed(soup)
         
         await interaction.followup.send(embed=embed, ephemeral=False)
 
@@ -1191,7 +1191,7 @@ async def profile(interaction: discord.Interaction, username: Optional[str] = No
         user_url = f"https://u.gg/lol/profile/{region.value}/{username}/overview"
         soup = await aio_get_soup(user_url)
 
-        embed = get_profile_embed(user_url,soup)
+        embed = get_profile_embed(soup)
         
         await interaction.followup.send(embed=embed, ephemeral=False)
 
