@@ -549,10 +549,19 @@ async def help(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral = False)
     #
 
+    embed = discord.Embed(title = "EggLol", description = "", color = 0x31ABC4)
     
-
+    embed.add_field(name = "", value = "*[] indicates a required field\n{} indicates an optional field*", inline = False)
+    embed.add_field(name = "", value = "**/set_profile** [region] [username] [main_champion]\n> Used to create a profile. The benefits of having a profile is a catered experience by auto-filling your region when searching for statistics and auto-filling your main champion in **/vs**.", inline = False)
+    embed.add_field(name = "", value = "**/profile** {username} {region}\n> Used to display your current profile if you pass no arguments (ex. /profile) or search for another user in a particular region (region is required for searching). Returns summoner level, rank, win-rate and more.", inline = False)
+    embed.add_field(name = "", value = "**/delete_profile** \n> As the name implies, used to delete your profile if you have one.", inline = False)
+    embed.add_field(name = "", value = "**/set_preference** [preference]\n> Used to change whether or not you would like to see text beside runes and items. Turn text off if you are a veteran player and know what the runes and items look like to have a cleaner design.", inline = False)
+    embed.add_field(name = "", value = "**/overview** [champion_name] {role} {rank} {queue_type} {region}\n> Used to find general statistical data for a champion such as win-rate, ban-rate, matches played and more.", inline = False)
+    embed.add_field(name = "", value = "**/build** [champion_name] {role} {rank} {queue_type} {region}\n> Used to find WR, runes, skill priority an build data for a champion.", inline = False)
+    embed.add_field(name = "", value = "**/vs** [first_champion] {second_champion} {role} {rank} {queue_type} {region}\n> Used to find win-rate, runes, skill priority an build data for a champion vs. another champion.\n> \n> /vs [first_champion]\n> returns results for your main champion stored in our database vs. [first_champion]\n> \n> /vs [first_champion] {second_champion}\n> returns results for [first_champion] vs. {second_champion}", inline = False)
+    embed.add_field(name = "Links", value = "[U.GG](https://u.gg) | [EggLoL Github Repository](https://github.com/alia720/EggLoL)", inline = False)
     #
-    await interaction.followup.send(interaction.guild.get_member(interaction.user.id).mobile_status)
+    await interaction.followup.send(embed = embed)
     return
 
 @bot.tree.command(name = "set_profile", description = "For a more tailored experience, set up your LoL profile!")
