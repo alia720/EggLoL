@@ -590,7 +590,7 @@ async def help(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral = False)
     #
 
-    embed = discord.Embed(title = "EggLol", description = "", color = 0x31ABC4)
+    embed = discord.Embed(title = "EggLol Commands", description = "", color = 0x31ABC4)
     
     embed.add_field(name = "", value = "*[] indicates a required field\n{} indicates an optional field*", inline = False)
     embed.add_field(name = "", value = "**/set_profile** [region] [username] [main_champion]\n> Used to create a profile. The benefits of having a profile is a catered experience by auto-filling your region when searching for statistics and auto-filling your main champion in **/vs**.", inline = False)
