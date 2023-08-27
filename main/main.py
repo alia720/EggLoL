@@ -1225,12 +1225,16 @@ async def delete_profile(interaction: discord.Interaction):
 
     discord_profile = interaction.user.id
 
-    discord_user = query_get_data(f"SELECT discord_user_id FROM discord_user WHERE discord_user_id = {discord_profile}")
+    discord_user = query_get_data(f"SELECT discord_user_id, profile_uuid FROM discord_user WHERE discord_user_id = {discord_profile}")
 
     if discord_user:
-        status_code = query_mainpulate_data(f"DELETE FROM discord_user WHERE discord_user_id = {discord_profile};")
+
+        profile_uuid = discord_user[1]
+
+        status_code_discord_user = query_mainpulate_data(f"DELETE FROM discord_user WHERE discord_user_id = {discord_profile};")
+        status_code_lol_profile = query_mainpulate_data(f"DELETE FROM lol_profile WHERE profile_uuid = '{profile_uuid}';")
         
-        if status_code == 200:
+        if status_code_discord_user == 200 and status_code_lol_profile == 200:
             embed = discord.Embed(description="Profile deleted successfully.", color=discord.Color.green())
         else:
             embed = discord.Embed(description="Failed to delete profile.", color=discord.Color.red())
