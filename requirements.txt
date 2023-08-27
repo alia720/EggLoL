@@ -5,10 +5,15 @@ async-timeout==4.0.2; python_version >= '3.6'
 attrs==23.1.0; python_version >= '3.7'
 beautifulsoup4==4.12.2
 charset-normalizer==3.2.0; python_full_version >= '3.7.0'
+configparser==6.0.0
 discord.py==2.3.1
 frozenlist==1.4.0; python_version >= '3.8'
 idna==3.4; python_version >= '3.5'
+lxml==4.9.3
 multidict==6.0.4; python_version >= '3.7'
+psycopg2==2.9.6
+simplejson==3.19.1
 soupsieve==2.4.1; python_version >= '3.7'
 typing==3.7.4.3
+uuid7==0.1.0
 yarl==1.9.2; python_version >= '3.7'

@@ -4,13 +4,9 @@ import discord
 import aiohttp
 import configparser
 import psycopg2
-import lxml
-import time
 import simplejson as json
-import numpy as np
 from uuid_extensions import uuid7
 from psycopg2 import Error
-from psycopg2 import IntegrityError
 from bs4 import BeautifulSoup
 from typing import Optional
 from types import SimpleNamespace
@@ -166,7 +162,7 @@ def create_url(interaction, champion_name, role, rank, queue_type, region):
 
         region_resp = query_get_data(f"SELECT region FROM discord_user JOIN lol_profile USING (profile_uuid) WHERE discord_user_id = {interaction.user.id}")
 
-        if region_resp != 400:
+        if region_resp != 400 and region_resp != None:
 
             region = app_commands.Choice(name = region_resp[0], value = get_region_for_url(region_resp[0]))
 
@@ -1062,12 +1058,14 @@ async def vs(interaction: discord.Interaction, first_champion: str, second_champ
             await interaction.followup.send(embed = embed_error(f"* **{first_champion}** is not a champion in League of Legends.\n"))
             return
 
-        my_champion = query_get_data(f"SELECT main_champion FROM discord_user JOIN lol_profile USING (profile_uuid) WHERE discord_user_id = {interaction.user.id};")[0]
+        my_champion = query_get_data(f"SELECT main_champion FROM discord_user JOIN lol_profile USING (profile_uuid) WHERE discord_user_id = {interaction.user.id};")
 
         if my_champion == None:
 
-            await interaction.followup.send(embed = embed_error(f"* It appears that you have not set up your profile! If you would like to, use /set_profile. If you would like to use this function without setting up your profile, specify 'second_champion' when calling this function."))
+            await interaction.followup.send(embed = embed_error(f"* It appears that you have not set up your profile! If you would like to, use /set_profile. If you would like to use this function without setting up your profile, specify **second_champion** when calling this function."))
             return
+        
+        my_champion = my_champion[0]
 
         opp = first_champion
         
