@@ -1186,7 +1186,6 @@ async def profile(interaction: discord.Interaction, username: Optional[str] = No
         embed = get_profile_embed(soup)
         
         await interaction.followup.send(embed=embed, ephemeral=False)
-
         return
     
     elif username == None and region != None:
@@ -1194,7 +1193,6 @@ async def profile(interaction: discord.Interaction, username: Optional[str] = No
         embed = embed_error("You did not specify a Summoner name")
 
         await interaction.followup.send(embed = embed, ephemeral = False)
-
         return
     
     elif username != None and region == None:
@@ -1202,7 +1200,6 @@ async def profile(interaction: discord.Interaction, username: Optional[str] = No
         embed = embed_error("You did not specify a Region")
 
         await interaction.followup.send(embed=embed, ephemeral=False)
-
         return
 
     else:
@@ -1213,7 +1210,6 @@ async def profile(interaction: discord.Interaction, username: Optional[str] = No
         embed = get_profile_embed(soup)
         
         await interaction.followup.send(embed=embed, ephemeral=False)
-
         return
 
 
@@ -1221,6 +1217,7 @@ async def profile(interaction: discord.Interaction, username: Optional[str] = No
     
 @bot.tree.command(name = "delete_profile", description = "Delete your profile.")
 async def delete_profile(interaction: discord.Interaction):
+
     await interaction.response.defer(ephemeral=False)
 
     discord_profile = interaction.user.id
@@ -1242,7 +1239,6 @@ async def delete_profile(interaction: discord.Interaction):
         embed = discord.Embed(description="Profile not found.", color=discord.Color.orange())
 
     await interaction.followup.send(embed=embed, ephemeral=False)
-
     return
 
 @bot.tree.command(name = "set_preference", description = "Choose whether or not you would like to see text beside runes and items to better identify them.")
