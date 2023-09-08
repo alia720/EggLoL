@@ -11,7 +11,44 @@ EggLoL is a Discord bot designed to provide League of Legends players easy acces
 
 ### :hammer_and_wrench: Functionality and Demos
 
+*When you create a profile, your region is autofilled for /overview, /build and /vs to provide tailored data.<br>Also your main champion is autofilled in /vs to make getting relevent data that much quicker.*
+
 - <details>
   <summary><b>/help</b> | A command to list all the commands of the bot and how to use them</summary>
+  <img src="" alt=""  height="450">
+</details>
+
+- <details>
+  <summary><b>/set_profile</b> | create or update your profile</summary>
+  <img src="" alt=""  height="450">
+</details>
+
+- <details>
+  <summary><b>/profile</b> | view your profile's relevant details such as rank, LP and more</summary>
+  <img src="" alt=""  height="450">
+</details>
+
+- <details>
+  <summary><b>/delete_profile</b> | delete your profile from our database</summary>
+  <img src="" alt=""  height="450">
+</details>
+
+- <details>
+  <summary><b>/set_preference</b> | choose whether or not you want to see the names of runes and items</summary>
+  <img src="" alt=""  height="450">
+</details>
+
+- <details>
+  <summary><b>/overview</b> | get an overview of a champion's stats in the current patch such as win-rate, ban-rate and more</summary>
+  <img src="" alt=""  height="450">
+</details>
+
+- <details>
+  <summary><b>/build</b> | get the recommended runes and items for the champion</summary>
+  <img src="" alt=""  height="450">
+</details>
+
+- <details>
+  <summary><b>/vs</b> | get the recommended runes and items for a champion vs. another champion</summary>
   <img src="" alt=""  height="450">
 </details>
