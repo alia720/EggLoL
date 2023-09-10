@@ -37,6 +37,8 @@ EggLoL is a specialized Discord bot created to grant League of Legends players e
 - <details>
   <summary><b>/set_preference</b> | choose whether or not you want to see the names of runes and items</summary>
   <img src="images\Commands\setpreference.png" alt=""  height="150">
+  <img src="images\Commands\showText.png" alt=""  height="150">
+  <img src="images\Commands\doNotShowText.png" alt=""  height="150">
 </details>
 
 - <details>
