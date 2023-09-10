@@ -9,7 +9,7 @@ EggLoL is a specialized Discord bot created to grant League of Legends players e
 
 **If you would like to invite the bot to your own server** | [Invite]()
 
-### :hammer_and_wrench: Functionality and Demos
+### :hammer_and_wrench: Functionality and Screenshots
 
 *When you create a profile, your region is autofilled for /overview, /build and /vs to provide tailored data.<br>Also your main champion is autofilled in /vs to make getting relevent data that much quicker.*
 
@@ -20,7 +20,7 @@ EggLoL is a specialized Discord bot created to grant League of Legends players e
 
 - <details>
   <summary><b>/set_profile</b> | create or update your profile</summary>
-  <img src="images\Commands\setprofile1.png" alt=""  height="50">
+  <img src="images\Commands\setprofile1.png" alt=""  height="50"><br>
   <img src="images\Commands\setprofile2.png" alt=""  height="300">
 </details>
 
@@ -36,26 +36,26 @@ EggLoL is a specialized Discord bot created to grant League of Legends players e
 
 - <details>
   <summary><b>/set_preference</b> | choose whether or not you want to see the names of runes and items</summary>
-  <img src="images\Commands\setpreference.png" alt=""  height="150">
-  <img src="images\Commands\showText.png" alt=""  height="150">
-  <img src="images\Commands\doNotShowText.png" alt=""  height="150">
+  <img src="images\Commands\setpreference.png" alt=""  height="150"><br>
+  <img src="images\commands\showText.png" alt=""  height="450">
+  <img src="images\commands\doNotShowText.png" alt=""  height="450">
 </details>
 
 - <details>
   <summary><b>/overview</b> | get an overview of a champion's stats in the current patch such as win-rate, ban-rate and more</summary>
-  <img src="images\Commands\overview.png" alt=""  height="100">
+  <img src="images\Commands\overview.png" alt=""  height="100"><br>
   <img src="images\Commands\overview2.png" alt=""  height="300">
 </details>
 
 - <details>
   <summary><b>/build</b> | get the recommended runes and items for the champion</summary>
-  <img src="images\Commands\Build.png" alt="" height="100">
+  <img src="images\Commands\Build.png" alt="" height="100"><br>
   <img src="images\Commands\Build1.png" alt=""  height="500">
 </details>
 
 - <details>
   <summary><b>/vs</b> | get the recommended runes and items for a champion vs. another champion</summary>
-  <img src="images\Commands\Vs.png" alt=""  height="100">
+  <img src="images\Commands\Vs.png" alt=""  height="100"><br>
   <img src="images\Commands\Vs1.png" alt=""  height="500">
 </details>
 
