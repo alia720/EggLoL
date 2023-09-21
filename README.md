@@ -2,7 +2,7 @@
 
 <details>
   <summary>Tech Diagram</summary>
-  <img src="images/diagram/EggLoL_diagram.png" alt="" height="350">
+  <img src="images/diagram/EggLoL_diagram.png" alt="" height="250">
 </details>
 
 EggLoL is a specialized Discord bot created to grant League of Legends players effortless access to champion statistics sourced from [U.GG](u.gg). Additionally, it facilitates user profile management and preference customization through a PostgreSQL database. With EggLoL, users can effortlessly remain informed about the most recent champion data and tailor their Discord experience to their liking.
