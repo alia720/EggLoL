@@ -11,8 +11,6 @@ EggLoL is a specialized Discord bot created to grant League of Legends players e
 
 *To do either options below you will need a Discord account.<br>if you do not have one, you can create one [here](https://discord.com/register) or take a look<br>at the demos provided.*
 
-**If you would like to join the community server for EggLoL where you can use the bot** | [Join]()
-
 **If you would like to invite the bot to your own server** | [Invite]()
 
 ### :hammer_and_wrench: Functionality and Screenshots
