@@ -1,4 +1,4 @@
-# EggLoL
+# EggLoL (Temporarily Offline)
 
 <details>
   <summary>Tech Diagram</summary>
