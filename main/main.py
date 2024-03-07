@@ -1212,9 +1212,6 @@ async def profile(interaction: discord.Interaction, username: Optional[str] = No
         await interaction.followup.send(embed=embed, ephemeral=False)
         return
 
-
-    
-    
 @bot.tree.command(name = "delete_profile", description = "Delete your profile.")
 async def delete_profile(interaction: discord.Interaction):
 
