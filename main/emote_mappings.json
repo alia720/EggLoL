@@ -141,7 +141,7 @@
         "item0.webp -144px -96px":  "Doran's Ring=<:DoransRing:1143372408988905563>",
         "item0.webp -48px -96px":   "Doran's Shield=<:DoransShield:1143372410243010671>",
         "item0.webp -432px -96px":  "Gustwalker Hatchling=<:GustwalkerHatchling:1143372412679880865>",
-        "item0.webp -144px -240px": "Health Potion=<:HealthPotion:1143372414143696918>",
+        "item0.webp -96px -240px":  "Health Potion=<:HealthPotion:1143372414143696918>",
         "item0.webp -96px -48px":   "Long Sword=<:LongSword:1143372415561371668>",
         "item0.webp -0px -144px":   "Mosstomper Seedling=<:MosstomperSeedling:1143372417708855377>",
         "item0.webp -336px -240px": "Refillable Potion=<:RefillablePotion:1143372418673545267>",

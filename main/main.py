@@ -154,7 +154,7 @@ def get_emote(emote_for, key):
     
     except:
 
-        return ":x:"
+        return "Not Found=:x:"
 
 def create_url(interaction, champion_name, role, rank, queue_type, region):
 
@@ -412,7 +412,15 @@ def get_detailed_text(build_data):
 
     for shard in build_data["shards"]:
 
-        shards_text += f"{get_emote('Shard', shard.img['alt'][4:][:-6])}  {shard.img['alt'][4:][:-6]}\n"
+        emote_mapping = get_emote('Shard', shard.img['alt'][4:][:-6])
+        
+        if emote_mapping == "Not Found=:x:":
+
+            shards_text += f"{emote_mapping.split("=")[1]}  {shard.img['alt'][4:][:-6]}\n"
+            
+        else: 
+            
+            shards_text += f"{emote_mapping}  {shard.img['alt'][4:][:-6]}\n"
 
     return main_runes_text, secondary_runes_text, shards_text
 
