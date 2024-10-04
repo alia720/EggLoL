@@ -106,7 +106,11 @@
         "Attack Speed":             "<:attack_speed:1137289048151564319>",
         "Scaling CDR":              "<:cdr:1137289049338556499>",
         "Scaling Bonus Health":     "<:hp:1137289051200835584>",
-        "Magic Resist":             "<:mr:1137289052467515442>"
+        "Magic Resist":             "<:mr:1137289052467515442>",
+        "Move Speed":               "<:MovementSpeed:1291669913160777810>",
+        "Health Scaling":               "<:hpscaling:1291669695866601525>",
+        "Tenacity and Slow Resist": "<:TenacityAndSlowResist:1291670097575809026>"
+
 
     },
 
