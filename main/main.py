@@ -322,7 +322,7 @@ def get_build_data(soup, champion_name_for_ui):
 
     try: 
         
-        core_items_stats = recommended_build_items_div.find("div", "core-items").find("div", "item-stats").div.text + f"({recommended_build_items_div.find('div', 'core-items').find('div', 'item-stats').find('div', 'matches').text})"
+        core_items_stats = recommended_build_items_div.find("div", "core-items").find("div", "item-stats").div.text + " " + f"({recommended_build_items_div.find('div', 'core-items').find('div', 'item-stats').find('div', 'matches').text})"
     
     except:
 
@@ -383,6 +383,18 @@ def get_item_text(data, view_type):
 
     return text
 
+def verified_runes_text(emote_mapping):
+    
+    if emote_mapping == 'Not Found=:x:':
+        
+        error_emote = f"{emote_mapping.split("=")[1]}"
+        return error_emote
+        
+    else:
+        
+        return emote_mapping
+        
+
 def get_detailed_text(build_data):
 
     main_runes_text = ""
@@ -392,21 +404,21 @@ def get_detailed_text(build_data):
 
         if rune_index == 0:
 
-            main_runes_text += f"{get_emote('Tree', build_data['primary_tree'])}  {build_data['primary_tree']}\n"
+            main_runes_text += f"{verified_runes_text(get_emote('Tree', build_data['primary_tree']))}  {build_data['primary_tree']}\n"
 
-            main_runes_text += f"{get_emote('Keystone', rune.img['alt'][13:])}  {rune.img['alt'][13:]}\n"
+            main_runes_text += f"{verified_runes_text(get_emote('Keystone', rune.img['alt'][13:]))}  {rune.img['alt'][13:]}\n"
 
         elif rune_index in range(1, 4):
 
-            main_runes_text += f"{get_emote('Rune', rune.img['alt'][9:])}  {rune.img['alt'][9:]}\n"
+            main_runes_text += f"{verified_runes_text(get_emote('Rune', rune.img['alt'][9:]))}  {rune.img['alt'][9:]}\n"
 
         if rune_index == 4:
 
-            secondary_runes_text += f"{get_emote('Tree', build_data['secondary_tree'])}  {build_data['secondary_tree']}\n"
+            secondary_runes_text += f"{verified_runes_text(get_emote('Tree', build_data['secondary_tree']))}  {build_data['secondary_tree']}\n"
 
         if rune_index in range(4, 6):
 
-            secondary_runes_text += f"{get_emote('Rune', rune.img['alt'][9:])}  {rune.img['alt'][9:]}\n"
+            secondary_runes_text += f"{verified_runes_text(get_emote('Rune', rune.img['alt'][9:]))}  {rune.img['alt'][9:]}\n"
 
     shards_text = ""
 
