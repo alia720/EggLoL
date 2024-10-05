@@ -51,9 +51,11 @@
     "Rune": {
 
         "Absolute Focus":           "<:Absolute_Focus_rune:1137293003791290368>",
+        "Absorb Life":              "<:AbsorbLife:1291918317610729564>",
         "Approach Velocity":        "<:Approach_Velocity_rune:1137292581508751360>",
         "Biscuit Delivery":         "<:Biscuit_Delivery_rune:1137292582590886008>",
         "Bone Plating":             "<:Bone_Plating_rune:1137292902578528306>",
+        "Cash Back":                "<:CashBack:1291916831753502831>",
         "Celerity":                 "<:Celerity_rune:1137293006135894107>",
         "Cheap Shot":               "<:Cheap_Shot_rune:1137292694222282813>",
         "Conditioning":             "<:Conditioning_rune:1137292904021364806>",
@@ -68,9 +70,11 @@
         "Ghost Poro":               "<:Ghost_Poro_rune:1137292698211074048>",
         "Hextech Flashtraption":    "<:Hextech_Flashtraption_rune:1137292588458721300>",
         "Ingenious Hunter":         "<:Ingenious_Hunter_rune:1137292699448381480>",
+        "Jack of All Trades":       "<:JackofAllTrades:1291916647199932478>",
         "Last Stand":               "<:Last_Stand_rune:1137292486675529859>",
         "Legend: Alacrity":         "<:Legend_Alacrity_rune:1137292487707340830>",
         "Legend: Bloodline":        "<:Legend_Bloodline_rune:1137292488814645329>",
+        "Legend: Haste":            "<:LegendHaste:1291918316218224812>",
         "Legend: Tenacity":         "<:Legend_Tenacity_rune:1137292490249080843>",
         "Magical Footwear":         "<:Magical_Footwear_rune:1137292589775728670>",
         "Manaflow Band":            "<:Manaflow_Band_rune:1137293010669944852>",
@@ -89,6 +93,7 @@
         "Sudden Impact":            "<:Sudden_Impact_rune:1137292702954827826>",
         "Taste of Blood":           "<:Taste_of_Blood_rune:1137292704234078318>",
         "Time Warp Tonic":          "<:Time_Warp_Tonic_rune:1137292594574012417>",
+        "Triple Tonic":             "<:TripleTonic:1291915742710595737>",
         "Transcendence":            "<:Transcendence_rune:1137293016294494229>",
         "Treasure Hunter":          "<:TreasureHunter:1137292706368991273>",
         "Triumph":                  "<:Triumph_rune:1137292494648922184>",
@@ -104,11 +109,12 @@
         "Adaptive Force":           "<:adaptive_force:1137289044502515823>",
         "Armor":                    "<:armor:1137289047027482765>",
         "Attack Speed":             "<:attack_speed:1137289048151564319>",
-        "Scaling CDR":              "<:cdr:1137289049338556499>",
+        "Ability Haste":            "<:cdr:1137289049338556499>",
         "Scaling Bonus Health":     "<:hp:1137289051200835584>",
         "Magic Resist":             "<:mr:1137289052467515442>",
         "Move Speed":               "<:MovementSpeed:1291669913160777810>",
-        "Health Scaling":               "<:hpscaling:1291669695866601525>",
+        "Health Scaling":           "<:hpscaling:1291669695866601525>",
+        "Health":                   "<:Health:1291913555691438090>",
         "Tenacity and Slow Resist": "<:TenacityAndSlowResist:1291670097575809026>"
 
 
