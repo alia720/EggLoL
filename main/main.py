@@ -188,9 +188,9 @@ def create_url(interaction, champion_name, role, rank, queue_type, region):
 
         error_msg += f"* **ARAM** game mode does not have ranks!\n"
 
-    if (queue_type.name == "Normal Blind" or queue_type.name == "Normal Draft") and rank != '{"name": "Emerald +"}':
+    if (queue_type.name == "Quickplay" or queue_type.name == "Normal Draft") and rank != '{"name": "Emerald +"}':
 
-        error_msg += f"* **Normal** game modes do not have ranks!\n"
+        error_msg += f"* The **Normal and Quickplay** game modes do not have ranks!\n"
 
     if error_msg != "":
 
@@ -794,7 +794,7 @@ async def set_profile(interaction: discord.Interaction, region: app_commands.Cho
         app_commands.Choice(name = "Ranked Solo/Duo", value = ""),
         app_commands.Choice(name = "ARAM", value = "aram"),
         app_commands.Choice(name = "Ranked Flex", value = "ranked_flex_sr"),
-        app_commands.Choice(name = "Normal Blind", value = "normal_blind_5x5"),
+        app_commands.Choice(name = "Quickplay", value = "quickplay"),
         app_commands.Choice(name = "Normal Draft", value = "normal_draft_5x5")
 
     ],
@@ -854,7 +854,13 @@ async def overview(interaction: discord.Interaction, champion_name: str, role: O
 
     if queue_type.name != "ARAM":
 
-        embed = discord.Embed(title = f"{champion_name_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**\n{get_emote('Rank', rank.name.split()[0])} {rank.name}", url = url,  color = 0x222247)
+        if queue_type.name == "Ranked Solo/Duo" or queue_type.name == "Ranked Flex":
+
+            embed = discord.Embed(title = f"{champion_name_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**\n{get_emote('Rank', rank.name.split()[0])} {rank.name}", url = url,  color = 0x222247)
+
+        else:
+
+            embed = discord.Embed(title = f"{champion_name_for_ui} | {role}", description = f"**{queue_type.name}** in **{region.name}**", url = url,  color = 0x222247)
 
     else:
         
@@ -914,7 +920,7 @@ async def overview(interaction: discord.Interaction, champion_name: str, role: O
         app_commands.Choice(name = "Ranked Solo/Duo", value = ""),
         app_commands.Choice(name = "ARAM", value = "aram"),
         app_commands.Choice(name = "Ranked Flex", value = "ranked_flex_sr"),
-        app_commands.Choice(name = "Normal Blind", value = "normal_blind_5x5"),
+        app_commands.Choice(name = "Quickplay", value = "quickplay"),
         app_commands.Choice(name = "Normal Draft", value = "normal_draft_5x5")
 
     ],
